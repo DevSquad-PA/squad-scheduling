@@ -10,70 +10,52 @@ export default function Login() {
 
     const [form, setForm] = useState({
         login: "",
-        senha: ""
+        password: ""
     })
 
     function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
         const { name, value } = e.target
-
-        setForm({
-            ...form,
-            [name]: value
-        })
+        setForm({...form, [name]: value})
     }
 
-    function entrar(e: React.FormEvent) {
+    function submit(e: React.FormEvent) {
         e.preventDefault()
-
-        console.log(`Login: ${form.login} Senha: ${form.senha}`)
+        console.log(`Login: ${form.login} Senha: ${form.password}`)
     }
 
     return (
 
         <main className="flex justify-center items-center h-screen">
 
-            <section className="bg-bg h-fit w-fit m-4 flex lg:flex-row flex-col justify-center items-center mx-auto ">
+                <section 
+                className= "bg-surface text-text w-90 h-99 top-46 left-115 rounded-[20px] flex flex-col gap-1 opacity-100 px-10">
 
-                <header className="bg-primary lg:min-h-96 h-fit w-fit flex p-8 flex-col justify-center items-center text-white">
-                    <h1 className="font-extrabold  text-2xl">AGENDAMENTO</h1>
-                    <p>Projeto avançado 1 - DevSquad</p>
-                </header>
+                    <h2 className="text-[24px] w-full font-bold text-center mt-14 mb-6">Login</h2>
 
-                <section className="flex flex-col gap-2 justify-center items-center p-8 text-text">
-
-                    <h2 className="text-xl font-bold">Faça o login</h2>
-
-                    <form onSubmit={entrar} className="flex flex-col gap-2 justify-center items-center">
-
-                        <label className="flex items-center gap-2">
-                            {/* <FaUser />  */}
+                    <form onSubmit={submit} className="flex flex-col gap-2 justify-center items-center w-full">
+                       
                             <Input
-                                name="login"
-                                placeholder="Usuário"
+                                name="user"
+                                placeholder="usuário"
                                 value={form.login}
-                                onChange={handleChange} />
-                        </label>
-
-                        <label className="flex items-center gap-2">
-                            {/* <FaLock /> */}
+                                onChange={handleChange}/>
+                        
                             <Input
-                                placeholder="Senha"
+                                placeholder="senha"
                                 type="password"
-                                name="senha"
-                                value={form.senha}
-                                onChange={handleChange} />
-                        </label>
+                                name="password"
+                                value={form.password}
+                                onChange={handleChange}/>
+                        
+                        <Link href="" className="flex gap-2 text-sm w-full justify-center mb-4 text-text-muted hover:text-text">esqueci a senha</Link>
 
-                        <Link href="" className="flex gap-2 text-sm w-full justify-end">Esqueceu a senha?</Link>
-
-                        <Button text="Entrar" type="submit" />
-
+                        <Button text="Entrar" type="submit"/>
                     </form>
 
-                    <Link href="">Criar Conta</Link>
+                    <Button text="Cadastrar" transparent={true}/>
 
                 </section>
-            </section>
+
         </main>
     )
 }
