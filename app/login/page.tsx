@@ -1,61 +1,76 @@
-// import { FaUser } from "react-icons/fa";
-// import { FaLock } from "react-icons/fa";
 "use client";
 import Link from "next/link";
-import Button from "../components/Button";
-import Input from "../components/Input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
 
 export default function Login() {
+  const [form, setForm] = useState({
+    login: "",
+    password: ""
+  });
 
-    const [form, setForm] = useState({
-        login: "",
-        password: ""
-    })
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+  }
 
-    function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-        const { name, value } = e.target
-        setForm({...form, [name]: value})
-    }
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    console.log(`Login: ${form.login} Senha: ${form.password}`);
+  }
 
-    function submit(e: React.FormEvent) {
-        e.preventDefault()
-        console.log(`Login: ${form.login} Senha: ${form.password}`)
-    }
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <Card className="w-full max-w-md bg-card">
+        <CardHeader>
+          <CardTitle className="text-center text-foreground">Login</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="user">Usuário</Label>
+              <Input
+                id="user"
+                name="user"
+                placeholder="usuário"
+                value={form.login}
+                onChange={handleChange}
+              />
+            </div>
 
-    return (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="password">Senha</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="senha"
+                value={form.password}
+                onChange={handleChange}
+              />
+            </div>
 
-        <main className="flex justify-center items-center h-screen">
+            <Link href="" className="text-sm text-center text-muted-foreground hover:text-foreground">
+              Esqueci a senha
+            </Link>
 
-                <section 
-                className= "bg-surface text-text w-90 h-99 top-46 left-115 rounded-[20px] flex flex-col gap-1 opacity-100 px-10">
+            <Button type="submit" className="w-full">
+              Entrar
+            </Button>
+          </form>
 
-                    <h2 className="text-[24px] w-full font-bold text-center mt-14 mb-6">Login</h2>
-
-                    <form onSubmit={submit} className="flex flex-col gap-2 justify-center items-center w-full">
-                       
-                            <Input
-                                name="user"
-                                placeholder="usuário"
-                                value={form.login}
-                                onChange={handleChange}/>
-                        
-                            <Input
-                                placeholder="senha"
-                                type="password"
-                                name="password"
-                                value={form.password}
-                                onChange={handleChange}/>
-                        
-                        <Link href="" className="flex gap-2 text-sm w-full justify-center mb-4 text-text-muted hover:text-text">esqueci a senha</Link>
-
-                        <Button text="Entrar" type="submit"/>
-                    </form>
-
-                    <Button text="Cadastrar" transparent={true}/>
-
-                </section>
-
-        </main>
-    )
+          <div className="mt-4 text-center">
+            <Link href="/signup">
+              <Button variant="outline" className="w-full">
+                Cadastrar
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
