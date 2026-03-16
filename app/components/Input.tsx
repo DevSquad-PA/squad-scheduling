@@ -11,3 +11,4 @@ export default function Input({ placeholder, type, name, value, onChange }: Inpu
             className="bg-bg text-text border-2 border-text-muted p-1 px-2 rounded-xl text-sm w-full" />
     )
 }
+
