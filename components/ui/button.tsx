@@ -9,8 +9,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        themegreen: "bg-[#509A79] text-white hover:bg-[#2D5744] w-full",
-        off: "border-2 border-[#509A79] text-[#509A79] hover:text-white hover:bg-[#2D5744] w-full",
+        themegreen: "bg-primary text-white hover:bg-primary-hover w-full",
+        off: "border-2 border-primary text-primary hover:text-white hover:bg-primary-hover w-full",
         default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
