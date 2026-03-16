@@ -2,8 +2,8 @@
 // import { FaLock } from "react-icons/fa";
 "use client";
 import Link from "next/link";
-import Button from "../components/Button";
-import Input from "../components/Input";
+import {Button} from "../../components/ui/button";
+import {Input} from "../../components/ui/input";
 import { useState } from "react";
 
 export default function Login() {
@@ -47,12 +47,12 @@ export default function Login() {
                                 value={form.password}
                                 onChange={handleChange}/>
                         
-                        <Link href="" className="flex gap-2 text-sm w-full justify-center mb-4 text-text-muted hover:text-text">esqueci a senha</Link>
+                        <Link href="" className="flex gap-2 text-primary-hover hover:text-text text-sm w-full justify-center mb-4">esqueci a senha</Link>
 
-                        <Button text="Entrar" type="submit"/>
+                        <Button type="submit" variant="themegreen"> Entrar</Button>
                     </form>
 
-                    <Button text="Cadastrar" transparent={true}/>
+                    <Button variant="off">Cadastrar</Button>
 
                 </section>
 
