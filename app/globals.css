@@ -5,18 +5,21 @@
 @custom-variant dark (&:is(.dark *));
 
 
+
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
+  
+  
 
-  --color-bg: #ffffff;
+  --color-bg: #D1E7DD;
   --color-surface: #D1E7DD;
   --color-text: #1C362A;
+  --color-text2: #2D5744;
   --color-alert: #DD2224;
   --color-primary: #509A79;
-  --color-primary-hover: #2D5744;
+  --color-primary-hover: #6CB292;
   --color-borderi: #8DC4AB;
 
   --color-sidebar-ring: var(--sidebar-ring);

@@ -8,6 +8,8 @@ import { useState } from "react";
 
 export default function Login() {
 
+    const [showPassword, setShowPassword] = useState(false)
+
     const [form, setForm] = useState({
         login: "",
         password: ""
@@ -28,32 +30,48 @@ export default function Login() {
         <main className="flex justify-center items-center h-screen bg-bg">
 
                 <section 
-                className= "bg-surface text-text w-90 h-99 top-46 left-115 rounded-[20px] flex flex-col gap-1 opacity-100 px-10">
+                className= "bg-surface w-86 h-108 py-16 px-8 rounded-[20px] flex flex-col gap-3 opacity-100">
 
-                    <h2 className="text-[24px] w-full font-bold text-center mt-14 mb-6">Login</h2>
+                    <h2 className="text-[24px] text-text2 w-full font-bold text-center mb-8">Login</h2>
 
-                    <form onSubmit={submit} className="flex flex-col gap-2 justify-center items-center w-full">
+                    <form onSubmit={submit} className="flex flex-col gap-3 justify-center items-center w-full">
                        
                             <Input
                                 name="user"
-                                placeholder="usuário"
+                                placeholder="Usuário"
                                 value={form.login}
                                 onChange={handleChange}/>
                         
+                        <div className="flex w-full relative"> 
                             <Input
-                                placeholder="senha"
-                                type="password"
+                                placeholder="Senha"
+                                type={showPassword ? "text" : "password"}
                                 name="password"
                                 value={form.password}
                                 onChange={handleChange}/>
+
+                                {showPassword &&
+
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                 onClick={() => setShowPassword(!showPassword)}
+                                  width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute right-5 top-1/2 -translate-y-1/2 text-text2 lucide lucide-eye-icon lucide-eye"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+                                }
+
+                                
+                                {!showPassword &&
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                onClick={() => setShowPassword(!showPassword)}
+                                 width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute right-5 top-1/2 -translate-y-1/2 lucide lucide-eye-off-icon lucide-eye-off text-text2"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>
+                                }
+                            </div>
                         
-                        <Link href="" className="flex gap-2 text-primary-hover hover:text-text text-sm w-full justify-center mb-4">esqueci a senha</Link>
+
+                        <Link href="" className="flex gap-2 py-1 text-text2 hover:text-text text-base w-full justify-center ">Esqueci a senha</Link>
+
+                        <Button type="submit" variant="themegreen"> Entrar</Button>
                     </form>
 
-                    <Button type="submit" variant="themegreen"> Entrar</Button>
-                    <Link href="/signup">
-                        <Button variant="off">Cadastrar</Button>
-                    </Link>
+                    <Button variant="transparent">Cadastrar</Button>
 
                 </section>
 
