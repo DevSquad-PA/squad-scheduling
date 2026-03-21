@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import PhoneInput from "@/components/ui/phone-input";
 
 export default function SignupPage() {
@@ -20,11 +20,17 @@ export default function SignupPage() {
   };
 
   return (
-    <main className="flex justify-center items-center h-screen bg-bg">
-      <section className="bg-surface text-text w-90 h-auto rounded-[20px] flex flex-col gap-4 px-10 py-8">
-        <h2 className="text-[24px] w-full font-bold text-center mt-4 mb-6">Cadastro</h2>
+    <main className="bg-bg flex h-screen items-center justify-center">
+      <section className="bg-surface text-text flex h-auto w-90 flex-col gap-4 rounded-[20px] px-10 py-8">
+        <h2 className="mt-4 mb-6 w-full text-center text-[24px] font-bold">
+          Cadastro
+        </h2>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 justify-center items-center w-full" noValidate>
+        <form
+          onSubmit={handleSubmit}
+          className="flex w-full flex-col items-center justify-center gap-4"
+          noValidate
+        >
           <Input
             id="fullName"
             name="fullName"
@@ -43,18 +49,9 @@ export default function SignupPage() {
             required
           />
 
-          <Input
-            id="birthDate"
-            name="birthDate"
-            type="date"
-            required
-          />
+          <Input id="birthDate" name="birthDate" type="date" required />
 
-          <PhoneInput
-            id="phone"
-            name="phone"
-            required
-          />
+          <PhoneInput id="phone" name="phone" required />
 
           <Input
             id="email"
@@ -64,7 +61,9 @@ export default function SignupPage() {
             required
           />
 
-          <Button type="submit" variant="themegreen" className="mt-4">Cadastrar</Button>
+          <Button type="submit" variant="themegreen" className="mt-4">
+            Cadastrar
+          </Button>
           <Link href="/login">
             <Button variant="off">Voltar ao login</Button>
           </Link>

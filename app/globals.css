@@ -4,16 +4,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
-
-
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  
-  
-
-  --color-bg: #D1E7DD;
+  --color-bg: #FFFFFF;
   --color-surface: #D1E7DD;
   --color-text: #1C362A;
   --color-text2: #2D5744;
@@ -21,7 +15,6 @@
   --color-primary: #509A79;
   --color-primary-hover: #6CB292;
   --color-borderi: #8DC4AB;
-
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
