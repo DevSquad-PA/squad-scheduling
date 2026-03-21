@@ -2,8 +2,8 @@
 // import { FaLock } from "react-icons/fa";
 "use client";
 import Link from "next/link";
-import {Button} from "../../components/ui/button";
-import {Input} from "../../components/ui/input";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
 import { useState } from "react";
 
 export default function Login() {
@@ -27,7 +27,7 @@ export default function Login() {
 
     return (
 
-        <main className="flex justify-center items-center h-screen">
+        <main className="flex justify-center items-center h-screen bg-bg">
 
                 <section 
                 className= "bg-surface w-86 h-108 py-16 px-8 rounded-[20px] flex flex-col gap-3 opacity-100">
