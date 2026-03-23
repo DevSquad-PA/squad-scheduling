@@ -3,25 +3,56 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import z from "zod";
+import { login } from "@/actions/auth/login";
+import { useRouter } from "next/navigation";
+import { useAction } from "next-safe-action/hooks";
+
+const formSchema = z.object({
+  email: z.string().email("Email inválido"),
+  password: z.string().min(1, "Senha é obrigatória"),
+});
+
+type FormSchema = z.infer<typeof formSchema>;
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [form, setForm] = useState({
-    login: "",
-    password: "",
+  const router = useRouter();
+
+  const form = useForm<FormSchema>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
   });
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-  }
+  const { execute, status } = useAction(login, {
+    onSuccess: async (result) => {
+      if (result?.data?.message) {
+        //trocar por toast de sucesso da página
+        alert(result.data.message);
+      }
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
-    console.log(`Login: ${form.login} Senha: ${form.password}`);
-  }
+      router.push("/dashboard");
+      router.refresh();
+    },
+    onError: ({ error }) => {
+      if (error.serverError) {
+        //trocar por toast de erro da página
+        console.log("Server error:", error.serverError);
+      }
+    },
+  });
+
+  const onSubmit = (data: FormSchema) => {
+    execute(data);
+  };
 
   return (
     <main className="bg-bg flex h-screen items-center justify-center">
@@ -31,23 +62,16 @@ export default function Login() {
         </h2>
 
         <form
-          onSubmit={submit}
+          onSubmit={form.handleSubmit(onSubmit)}
           className="flex w-full flex-col items-center justify-center gap-3"
         >
-          <Input
-            name="login"
-            placeholder="Usuário"
-            value={form.login}
-            onChange={handleChange}
-          />
+          <Input type="email" placeholder="Email" {...form.register("email")} />
 
           <div className="relative flex w-full">
             <Input
               placeholder="Senha"
               type={showPassword ? "text" : "password"}
-              name="password"
-              value={form.password}
-              onChange={handleChange}
+              {...form.register("password")}
             />
 
             {showPassword && (
@@ -98,9 +122,12 @@ export default function Login() {
             Esqueci a senha
           </Link>
 
-          <Button type="submit" variant="themegreen">
-            {" "}
-            Entrar
+          <Button
+            type="submit"
+            variant="themegreen"
+            disabled={status === "executing" || isLoading}
+          >
+            {status === "executing" || isLoading ? "Entrando..." : "Entrar"}
           </Button>
         </form>
 
