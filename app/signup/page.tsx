@@ -23,8 +23,8 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <Card className="w-full max-w-md bg-card">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-bg">
+      <Card className="w-full max-w-md bg-surface">
         <CardHeader>
           <CardTitle className="text-center text-foreground">Cadastro</CardTitle>
         </CardHeader>
@@ -85,7 +85,7 @@ export default function SignupPage() {
             </div>
 
             <div className="flex flex-col gap-4 mt-4">
-              <Button type="submit" className="w-full">
+              <Button type="submit" variant="themegreen" className="w-full">
                 Cadastrar
               </Button>
               <Link href="/login">
