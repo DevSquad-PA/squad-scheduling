@@ -265,7 +265,7 @@ function SidebarTrigger({
       variant="ghost"
       // size="icon-sm"
       className={cn(
-  "hover:bg-surface border-2 hover:border-text border-dotted hover:text-primary",
+  "hover:bg-transparent hover:text-primary",
   className
 )}
       onClick={(event) => {
@@ -470,7 +470,7 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
 }
 
 const sidebarMenuButtonVariants = cva(
-  "px-6 py-4 peer/menu-button group/menu-button flex w-full items-center gap-6 overflow-hidden rounded-md text-left text-text font-bold ring-sidebar-ring outline-hidden transition-[width,height,padding] group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-open:hover:bg-sidebar-accent data-open:hover:text-sidebar-accent-foreground data-active:bg-sidebar-accent data-active:font-medium data-active:text-sidebar-accent-foreground  [&>span:last-child]:truncate",
+  "px-6 py-4 cursor-pointer peer/menu-button group/menu-button flex w-full items-center gap-6 overflow-hidden rounded-md text-left text-text font-bold ring-sidebar-ring outline-hidden transition-[width,height,padding] group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-open:hover:bg-sidebar-accent data-open:hover:text-sidebar-accent-foreground data-active:bg-sidebar-accent data-active:font-medium data-active:text-sidebar-accent-foreground  [&>span:last-child]:truncate",
   {
     variants: {
       variant: {

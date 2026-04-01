@@ -9,7 +9,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        themegreen: " bg-primary text-surface hover:bg-primary-hover w-full",
+        themegreen: " bg-primary text-white hover:bg-primary-hover w-full",
         transparent: "border border-text text-text2 hover:bg-primary-hover hover:text-surface hover:border-primary-hover w-full",
         default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
         outline:
