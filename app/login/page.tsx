@@ -10,6 +10,7 @@ import z from "zod";
 import { login } from "@/actions/auth/login";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
+import { Eye, EyeOff } from "lucide-react";
 
 const formSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -56,7 +57,7 @@ export default function Login() {
 
   return (
     <main className="bg-bg flex h-screen items-center justify-center">
-      <section className="bg-surface flex h-108 w-86 flex-col gap-3 rounded-[20px] px-8 py-16 opacity-100">
+      <section className="bg-surface flex sm:h-108 sm:w-86 h-full w-full flex-col gap-3 sm:rounded-[20px] rounded-none px-8 py-16 opacity-100">
         <h2 className="text-text2 mb-8 w-full text-center text-[24px] font-bold">
           Login
         </h2>
@@ -75,43 +76,17 @@ export default function Login() {
             />
 
             {showPassword && (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                onClick={() => setShowPassword(!showPassword)}
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-text2 lucide lucide-eye-icon lucide-eye absolute top-1/2 right-5 -translate-y-1/2"
-              >
-                <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-            )}
+
+              <Eye onClick={() => setShowPassword(!showPassword)}
+              className="text-text2 lucide lucide-eye-icon lucide-eye absolute top-1/2 right-5 -translate-y-1/2"/>)}
+              
+               
 
             {!showPassword && (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                onClick={() => setShowPassword(!showPassword)}
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+             
+              <EyeOff onClick={() => setShowPassword(!showPassword)}
                 className="lucide lucide-eye-off-icon lucide-eye-off text-text2 absolute top-1/2 right-5 -translate-y-1/2"
-              >
-                <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49" />
-                <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" />
-                <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143" />
-                <path d="m2 2 20 20" />
-              </svg>
+              />
             )}
           </div>
 
