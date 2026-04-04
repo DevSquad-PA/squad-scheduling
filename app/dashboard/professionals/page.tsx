@@ -12,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { PhoneInput } from "@/app/components/PhoneInput";
@@ -22,13 +21,9 @@ type Professional = {
   user_id: string;
   clinic_id: string;
   speciality: string | null;
-  services: string | null; // CSV or text
+  services: string | null;
   created_at: string;
-  user: {
-    name: string;
-    email: string;
-    phone: string | null;
-  };
+  user: { name: string; email: string; phone?: string | null };
 };
 
 export default function ProfessionalsPage() {
@@ -39,60 +34,93 @@ export default function ProfessionalsPage() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (session) {
-      fetch("/api/professionals")
-        .then((res) => res.json())
-        .then((data) => {
-          setProfessionals(data);
-          setLoading(false);
-        })
-        .catch((err) => {
-          console.error(err);
-          setLoading(false);
-        });
-    }
+    if (!session) return;
+    fetch("/api/professionals")
+      .then((r) => r.json())
+      .then((data) => setProfessionals(data))
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, [session]);
 
-  async function createProfessional(payload: {
-    name?: string;
-    email?: string;
-    phone?: string;
-    speciality?: string;
-    services?: string;
-  }) {
+  async function createProfessional(payload: any) {
     try {
       const res = await fetch("/api/professionals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
-      if (!res.ok) throw new Error("Failed to create");
-
+      if (!res.ok) throw new Error("create failed");
       const created = await res.json();
-      setProfessionals((prev) => [created, ...prev]);
+      setProfessionals((p) => [created, ...p]);
       setOpen(false);
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error(e);
       alert("Erro ao criar profissional");
     }
   }
 
-  const filteredProfessionals = professionals.filter((p) => {
-    const nameMatch = p.user.name.toLowerCase().includes(search.toLowerCase());
-    const specialityMatch = p.speciality?.toLowerCase().includes(search.toLowerCase());
-    const servicesText = p.services || "";
-    const servicesMatch = servicesText.toLowerCase().includes(search.toLowerCase());
-    return nameMatch || specialityMatch || servicesMatch;
+  const filtered = professionals.filter((p) => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      p.user.name.toLowerCase().includes(q) ||
+      (p.speciality || "").toLowerCase().includes(q) ||
+      (p.services || "").toLowerCase().includes(q)
+    );
   });
 
-  if (!session) {
-    return <div>Please log in</div>;
-  }
+  const ProfessionalsForm = ({ onSubmit, onCancel }: { onSubmit: (p: any) => void; onCancel: () => void }) => {
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [phone, setPhone] = useState("");
+    const [speciality, setSpeciality] = useState("");
+    const [services, setServices] = useState("");
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+    return (
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          onSubmit({ name, email, phone, speciality, services });
+        }}
+        className="flex flex-col gap-3"
+      >
+        <label className="flex flex-col gap-1">
+          <span className="text-sm">Nome</span>
+          <Input value={name} onChange={(e) => setName(e.target.value)} />
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-sm">Email</span>
+          <Input value={email} onChange={(e) => setEmail(e.target.value)} />
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-sm">Telefone</span>
+          <PhoneInput value={phone} onChange={(e: any) => setPhone(e.target.value)} />
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-sm">Especialidade</span>
+          <Input value={speciality} onChange={(e) => setSpeciality(e.target.value)} />
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-sm">Serviços (vírgula separados)</span>
+          <Input value={services} onChange={(e) => setServices(e.target.value)} />
+        </label>
+
+        <div className="flex gap-2 justify-end mt-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancelar
+          </Button>
+          <Button type="submit">Salvar</Button>
+        </div>
+      </form>
+    );
+  };
+
+  if (!session) return <div>Please log in</div>;
+  if (loading) return <div>Loading...</div>;
 
   return (
     <div className="p-4 md:p-8 flex flex-col gap-4">
@@ -113,80 +141,31 @@ export default function ProfessionalsPage() {
         </Dialog>
 
         <div className="relative w-full max-w-xs md:w-fit">
-        <Input
-          placeholder="Pesquisar"
-          className="w-full pr-10"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <Input
+            placeholder="Pesquisar"
+            className="w-full pr-10"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredProfessionals.map((professional) => (
-          <Card key={professional.id_profissional}>
+        {filtered.map((p) => (
+          <Card key={p.id_profissional}>
             <CardHeader>
-              <CardTitle>{professional.user.name}</CardTitle>
+              <CardTitle>{p.user.name}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p>Email: {professional.user.email}</p>
-              <p>Telefone: {professional.user.phone || "N/A"}</p>
-              <p>Especialidade: {professional.speciality || "N/A"}</p>
-              <p>Serviços: {professional.services || "N/A"}</p>
+              <p>Email: {p.user.email}</p>
+              <p>Telefone: {p.user.phone || "N/A"}</p>
+              <p>Especialidade: {p.speciality || "N/A"}</p>
+              <p>Serviços: {p.services || "N/A"}</p>
             </CardContent>
           </Card>
         ))}
       </div>
     </div>
-  );
-}
-
-function ProfessionalsForm({ onSubmit, onCancel }: { onSubmit: (p: any) => void; onCancel: () => void }) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [speciality, setSpeciality] = useState("");
-  const [services, setServices] = useState("");
-
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSubmit({ name, email, phone, speciality, services });
-      }}
-      className="flex flex-col gap-3"
-    >
-      <label className="flex flex-col gap-1">
-        <span className="text-sm">Nome</span>
-        <Input value={name} onChange={(e) => setName(e.target.value)} />
-      </label>
-
-      <label className="flex flex-col gap-1">
-        <span className="text-sm">Email</span>
-        <Input value={email} onChange={(e) => setEmail(e.target.value)} />
-      </label>
-
-      <label className="flex flex-col gap-1">
-        <span className="text-sm">Telefone</span>
-        <PhoneInput value={phone} onChange={(e: any) => setPhone(e.target.value)} />
-      </label>
-
-      <label className="flex flex-col gap-1">
-        <span className="text-sm">Especialidade</span>
-        <Input value={speciality} onChange={(e) => setSpeciality(e.target.value)} />
-      </label>
-
-      <label className="flex flex-col gap-1">
-        <span className="text-sm">Serviços (separados por vírgula)</span>
-        <Input value={services} onChange={(e) => setServices(e.target.value)} />
-      </label>
-
-      <div className="flex gap-2 justify-end mt-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancelar
-        </Button>
-        <Button type="submit">Salvar</Button>
-      </div>
-    </form>
   );
 }
