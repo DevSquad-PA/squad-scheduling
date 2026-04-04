@@ -31,7 +31,18 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(professionals);
+    // Map DB fields to the requested shape
+    const mapped = professionals.map((p) => ({
+      id_profissional: p.id,
+      user_id: p.userId,
+      clinic_id: p.clinicId,
+      speciality: p.specialty ?? null,
+      services: Array.isArray(p.services) ? p.services.join(", ") : (p.services as any) ?? null,
+      created_at: p.createdAt,
+      user: p.user,
+    }));
+
+    return NextResponse.json(mapped);
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

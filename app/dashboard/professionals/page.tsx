@@ -7,9 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
 type Professional = {
-  id: string;
-  specialty: string | null;
-  services: string[];
+  id_profissional: string;
+  user_id: string;
+  clinic_id: string;
+  speciality: string | null;
+  services: string | null; // CSV or text
+  created_at: string;
   user: {
     name: string;
     email: string;
@@ -38,11 +41,13 @@ export default function ProfessionalsPage() {
     }
   }, [session]);
 
-  const filteredProfessionals = professionals.filter((p) =>
-    p.user.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.specialty?.toLowerCase().includes(search.toLowerCase()) ||
-    p.services.some((s) => s.toLowerCase().includes(search.toLowerCase()))
-  );
+  const filteredProfessionals = professionals.filter((p) => {
+    const nameMatch = p.user.name.toLowerCase().includes(search.toLowerCase());
+    const specialityMatch = p.speciality?.toLowerCase().includes(search.toLowerCase());
+    const servicesText = p.services || "";
+    const servicesMatch = servicesText.toLowerCase().includes(search.toLowerCase());
+    return nameMatch || specialityMatch || servicesMatch;
+  });
 
   if (!session) {
     return <div>Please log in</div>;
@@ -53,30 +58,30 @@ export default function ProfessionalsPage() {
   }
 
   return (
-    <div className="p-8 flex flex-col gap-4">
+    <div className="p-4 md:p-8 flex flex-col gap-4">
       <h2 className="font-bold text-base mb-2">Profissionais</h2>
 
-      <div className="relative w-fit">
+      <div className="relative w-full max-w-xs md:w-fit">
         <Input
           placeholder="Pesquisar"
-          className="w-80 pr-10"
+          className="w-full pr-10"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredProfessionals.map((professional) => (
-          <Card key={professional.id}>
+          <Card key={professional.id_profissional}>
             <CardHeader>
               <CardTitle>{professional.user.name}</CardTitle>
             </CardHeader>
             <CardContent>
               <p>Email: {professional.user.email}</p>
               <p>Telefone: {professional.user.phone || "N/A"}</p>
-              <p>Especialidade: {professional.specialty || "N/A"}</p>
-              <p>Serviços: {professional.services.join(", ") || "N/A"}</p>
+              <p>Especialidade: {professional.speciality || "N/A"}</p>
+              <p>Serviços: {professional.services || "N/A"}</p>
             </CardContent>
           </Card>
         ))}
