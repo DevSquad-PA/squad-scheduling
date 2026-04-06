@@ -1,99 +1,173 @@
 "use client";
-import React from "react";
+
 import Link from "next/link";
 import { PhoneInput } from "@/app/components/PhoneInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { useState } from "react";
+
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useAction } from "next-safe-action/hooks";
+import { register } from "@/actions/auth/register";
+import { useRouter } from "next/navigation";
+
+import z from "zod";
+import { Eye, EyeOff } from "lucide-react";
+
+const formSchema = z
+  .object({
+    name: z.string().min(3, "Nome obrigatório"),
+    cpf: z.string().min(11, "CPF inválido"),
+    dateOfBirth: z.string().min(1, "Data obrigatória"),
+    phone: z.string().min(10, "Telefone inválido"),
+    email: z.string().email("Email inválido"),
+    password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+    confirmPassword: z.string().min(1, "Confirme sua senha"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "As senhas não coincidem",
+    path: ["confirmPassword"],
+  });
+
+type FormSchema = z.infer<typeof formSchema>;
 
 export default function SignupPage() {
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const payload = {
-      fullName: String(fd.get("fullName") || ""),
-      cpf: String(fd.get("cpf") || ""),
-      birthDate: String(fd.get("birthDate") || ""),
-      phone: String(fd.get("phone") || ""),
-      email: String(fd.get("email") || ""),
-    };
-    console.log("client submit:", payload);
-    // TODO: enviar payload para API
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const router = useRouter();
+
+  const form = useForm<FormSchema>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      cpf: "",
+      dateOfBirth: "",
+      phone: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  const { execute, status } = useAction(register, {
+    onSuccess: (result) => {
+      if (result?.data?.message) {
+        //trocar por toast de sucesso da página
+        alert(result.data.message);
+      }
+
+      router.push("/dashboard");
+      router.refresh();
+    },
+    onError: ({ error }) => {
+      //trocar por toast de erro
+      console.log("Server error:", error.serverError);
+    },
+  });
+
+  const onSubmit = (data: FormSchema) => {
+    execute(data);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-bg">
-      <Card className="w-full max-w-md bg-surface">
+    <div className="bg-bg flex min-h-screen items-center justify-center p-4">
+      <Card className="bg-surface w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-center text-foreground">Cadastro</CardTitle>
+          <CardTitle className="text-text2 mb-8 w-full px-4 py-8 text-center text-[24px] font-bold opacity-100">
+            Cadastro
+          </CardTitle>
         </CardHeader>
+
         <CardContent>
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="fullName">Nome completo</Label>
-              <Input
-                id="fullName"
-                name="fullName"
-                type="text"
-                placeholder="Nome completo"
-                required
-              />
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex flex-col gap-4"
+          >
+            <div>
+              <Input {...form.register("name")} placeholder="Nome completo" />
             </div>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="cpf">CPF</Label>
-              <Input
-                id="cpf"
-                name="cpf"
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]{11}"
-                placeholder="CPF"
-                required
-              />
+            <div>
+              <Input {...form.register("cpf")} placeholder="CPF" />
             </div>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="birthDate">Data de nascimento</Label>
-              <Input
-                id="birthDate"
-                name="birthDate"
-                type="date"
-                required
-              />
+            <div>
+              <Input type="date" {...form.register("dateOfBirth")} />
             </div>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="phone">Telefone</Label>
-              <PhoneInput
-                id="phone"
-                name="phone"
-                required
-              />
+            <div>
+              <PhoneInput {...form.register("phone")} />
             </div>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="email">Email</Label>
+            <div>
               <Input
-                id="email"
-                name="email"
                 type="email"
+                {...form.register("email")}
                 placeholder="Email"
-                required
               />
             </div>
 
-            <div className="flex flex-col gap-4 mt-4">
-              <Button type="submit" variant="themegreen" className="w-full">
-                Cadastrar
-              </Button>
-              <Link href="/login">
-                <Button type="button" variant="outline" className="w-full">
-                  Voltar ao login
-                </Button>
-              </Link>
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                placeholder="Senha"
+                className="pr-10"
+                {...form.register("password")}
+              />
+
+              {showPassword ? (
+                <EyeOff
+                  onClick={() => setShowPassword(false)}
+                  className="text-text2 absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
+                  size={18}
+                />
+              ) : (
+                <Eye
+                  onClick={() => setShowPassword(true)}
+                  className="text-text2 absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
+                  size={18}
+                />
+              )}
             </div>
+
+            <div className="relative">
+              <Input
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirmar senha"
+                className="pr-10"
+                {...form.register("confirmPassword")}
+              />
+
+              {showConfirmPassword ? (
+                <EyeOff
+                  onClick={() => setShowConfirmPassword(false)}
+                  className="text-text2 absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
+                  size={18}
+                />
+              ) : (
+                <Eye
+                  onClick={() => setShowConfirmPassword(true)}
+                  className="text-text2 absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
+                  size={18}
+                />
+              )}
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={status === "executing"}
+            >
+              {status === "executing" ? "Cadastrando..." : "Cadastrar"}
+            </Button>
+            <Link href="/login">
+              <Button type="button" variant="transparent" className="w-full">
+                Voltar ao login
+              </Button>
+            </Link>
           </form>
         </CardContent>
       </Card>
