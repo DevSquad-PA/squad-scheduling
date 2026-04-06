@@ -57,7 +57,7 @@ export default function Login() {
 
   return (
     <main className="bg-bg flex h-screen items-center justify-center">
-      <section className="bg-surface flex sm:h-108 sm:w-86 h-full w-full flex-col gap-3 sm:rounded-[20px] rounded-none px-8 py-16 opacity-100">
+      <section className="bg-surface flex h-full w-full flex-col gap-3 rounded-none px-8 py-16 opacity-100 sm:h-108 sm:w-86 sm:rounded-[20px]">
         <h2 className="text-text2 mb-8 w-full text-center text-[24px] font-bold">
           Login
         </h2>
@@ -76,15 +76,14 @@ export default function Login() {
             />
 
             {showPassword && (
-
-              <Eye onClick={() => setShowPassword(!showPassword)}
-              className="text-text2 lucide lucide-eye-icon lucide-eye absolute top-1/2 right-5 -translate-y-1/2"/>)}
-              
-               
-
+              <Eye
+                onClick={() => setShowPassword(!showPassword)}
+                className="text-text2 lucide lucide-eye-icon lucide-eye absolute top-1/2 right-5 -translate-y-1/2"
+              />
+            )}
             {!showPassword && (
-             
-              <EyeOff onClick={() => setShowPassword(!showPassword)}
+              <EyeOff
+                onClick={() => setShowPassword(!showPassword)}
                 className="lucide lucide-eye-off-icon lucide-eye-off text-text2 absolute top-1/2 right-5 -translate-y-1/2"
               />
             )}
