@@ -4,45 +4,66 @@ import { Input } from "@/components/ui/input"
 import { Search, ChevronLeft, ChevronRight, UserPen } from "lucide-react"
 import { useState } from "react"
 import { AgendamentoDialog } from "./components/AgendamentoPopup"
+import { useQuery } from "@tanstack/react-query"
+import { getAppointments } from "@/actions/getAppointments"
 
-type Agendamento = {
-  nome: string
-  data: string
-  hora: string
-  descricao: string
+type propsappointment = {
+  id: string
+  date: Date
+  time: Date
+  services: string[]
+  patient: {
+    user: {
+      name: string
+    }
+  }
+  professional: {
+    user: {
+      name: string
+    }
+  }
 }
 
 export default function Dashboard() {
   const [search, setSearch] = useState("")
   const [dataAtual, setDataAtual] = useState(new Date())
-  const exemplo: Agendamento[] = [
-    {
-      nome: "José Maria da Silva",
-      data: "27/03/2026",
-      hora: "14:00",
-      descricao: "Atendimento com dentista.",
-    },
-    {
-      nome: "Lucas Fernandes Ribeiro",
-      data: "27/03/2026",
-      hora: "14:00",
-      descricao: "Atendimento com dentista.",
-    },
-    {
-      nome: "Maria Santana de Lopez",
-      data: "28/03/2026",
-      hora: "15:00",
-      descricao: "Cirurgia com ortopedista.",
-    },
-  ]
 
+  const { data: appointments = [] } = useQuery({
+    queryKey: ["appointments"],
+    queryFn: getAppointments,
+  })
 
-  function formatarData(date: Date) {
-    return date.toLocaleDateString("pt-BR", {
+  // ✅ DATA COM TIMEZONE FIXO
+  function formatarData(date: Date | string) {
+    return new Date(date).toLocaleDateString("pt-BR", {
+      timeZone: "America/Sao_Paulo",
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
     })
+  }
+
+  // ✅ HORA SEGURA
+  function formatarHora(time: Date | string) {
+    const d = new Date(time)
+
+    return new Date(1970, 0, 1, d.getHours(), d.getMinutes())
+      .toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+  }
+
+  // ✅ COMPARAÇÃO DE DATA CORRETA
+  function mesmaData(d1: Date | string, d2: Date) {
+    return (
+      new Date(d1).toLocaleDateString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+      }) ===
+      new Date(d2).toLocaleDateString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+      })
+    )
   }
 
   function formatarParaInput(date: Date) {
@@ -51,13 +72,6 @@ export default function Dashboard() {
     const dia = String(date.getDate()).padStart(2, "0")
     return `${ano}-${mes}-${dia}`
   }
-
-
-  function parseData(data: string) {
-    const [dia, mes, ano] = data.split("/")
-    return new Date(Number(ano), Number(mes) - 1, Number(dia))
-  }
-
 
   function handleDataInput(value: string) {
     const [ano, mes, dia] = value.split("-")
@@ -72,22 +86,19 @@ export default function Dashboard() {
     })
   }
 
-  const filtrados = exemplo.filter((e) => {
-    const matchData =
-      formatarData(parseData(e.data)) === formatarData(dataAtual)
+  const filtrados = appointments.filter((a: propsappointment) => {
+    const matchData = mesmaData(a.date, dataAtual)
 
     const matchSearch =
-      e.nome.toLowerCase().includes(search.toLowerCase()) ||
-      e.descricao.toLowerCase().includes(search.toLowerCase())
+      a.patient.user.name.toLowerCase().includes(search.toLowerCase()) ||
+      a.services.join(", ").toLowerCase().includes(search.toLowerCase())
 
     return matchData && matchSearch
   })
 
   return (
-
     <div className="p-8 flex flex-col gap-4">
       <h2 className="font-bold text-base mb-2">Agendamentos</h2>
-
 
       <div className="flex items-center gap-4">
         <AgendamentoDialog />
@@ -103,10 +114,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-
-
       <div className="flex items-center gap-4 mt-4">
-
         <button onClick={() => mudarDia(-1)}>
           <ChevronLeft className="w-6 h-6 cursor-pointer" />
         </button>
@@ -124,30 +132,39 @@ export default function Dashboard() {
       </div>
 
       {filtrados.length === 0 && (
-        <p className="text-sm text-gray-500">
-          Nenhum agendamento
-        </p>
+        <p className="text-sm text-gray-500">Nenhum agendamento</p>
       )}
 
-      {filtrados.map((e, i) => (
+      <div className="grid grid-cols-[2fr_2fr_2fr_1fr_1fr_1fr_auto] gap-x-6 py-2 font-bold">
+        <p>Nome</p>
+        <p>Serviço</p>
+        <p>Profissional</p>
+        <p>Data</p>
+        <p>Hora</p>
+      </div>
+
+      {filtrados.map((a) => (
         <div
-          key={i}
-          className="grid grid-cols-[2fr_3fr_1.5fr_auto] gap-x-6 gap-y-1 py-2 items-center w-full"
+          className="grid grid-cols-[2fr_2fr_2fr_1fr_1fr_1fr_auto] gap-x-6 py-2 items-center"
+          key={a.id}
         >
-          <p className="truncate">{e.nome}</p>
-          <p className="truncate">{e.descricao}</p>
-          <p className="whitespace-nowrap">
-            às {e.hora} horas
-          </p>
+          <p>{a.patient.user.name}</p>
+
+          <p>{a.services.join(", ")}</p>
+
+          <p>{a.professional.user.name}</p>
+
+          <p>{formatarData(a.date)}</p>
+
+          <p>às {formatarHora(a.time)}</p>
 
           <button className="cursor-pointer">
             <UserPen className="hover:text-primary" />
           </button>
 
-          <span className="col-span-full h-px bg-text2"></span>
+          <span className="border-b border-text2 col-span-full" />
         </div>
       ))}
     </div>
-
   )
 }

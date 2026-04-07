@@ -1,6 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { createAppointment } from "@/actions/create-booking"
+
+import { useMutation } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
+import { getProfessionals } from "@/actions/get-professionals"
+import { useState, useEffect } from "react"
+import { useForm, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import z from "zod"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,30 +26,35 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
+import { getAvailableTime } from "@/actions/get-date-available-time"
 
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import z from "zod"
 
-// =======================
-// ✅ ZOD
-// =======================
+
+
 const formSchema = z.object({
   nome: z.string().min(3, "Nome obrigatório"),
-  cpf: z.string().min(14, "CPF inválido"),
+  cpf: z.string().min(11, "CPF inválido").max(11, "CPF inválido"),
   endereco: z.string().min(3, "Endereço obrigatório"),
-  contato: z.string().min(14, "Telefone inválido"),
-  servico: z.string().min(1, "Selecione o serviço"),
+  contato: z.string().min(11, "Telefone inválido").max(11, "Telefone inválido"),
+  categoria: z.string().min(1, "Selecione o serviço"),
+  servico: z.string().min(1, "Selecione ao menos um serviço"),
   especialista: z.string().min(1, "Selecione o especialista"),
-  data: z.string().min(1, "Selecione a data"),
-  hora: z.string().min(1, "Selecione a hora"),
+
+  hora: z.string().min(1, "Selecione uma hora"),
+  date: z.string().refine((date) => {
+    const hoje = new Date().toISOString().split("T")[0]
+    return date >= hoje
+  }, {
+    message: "Data não pode ser no passado"
+  })
 })
 
 type FormSchema = z.infer<typeof formSchema>
 
-// =======================
-// ✅ MÁSCARAS
-// =======================
+function unmask(value: string) {
+  return value.replace(/\D/g, "")
+}
+
 function formatCPF(value: string) {
   return value
     .replace(/\D/g, "")
@@ -57,12 +70,36 @@ function formatTelefone(value: string) {
     .replace(/(\d{5})(\d)/, "$1-$2")
 }
 
-// =======================
-// COMPONENTE
-// =======================
+
 export function AgendamentoDialog() {
-  const [servico, setServico] = useState("")
-  const [especialista, setEspecialista] = useState("")
+  const [categoria, setCategoria] = useState("")
+  const [availableTimes, setAvailableTimes] = useState<string[]>([])
+  const [especialistaId, setEspecialistaId] = useState("")
+  const mutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await createAppointment(data)
+
+      // next-safe-action retorna isso
+      if (res?.validationErrors) {
+        throw new Error(res.validationErrors._errors?.[0] || "Erro")
+      }
+
+      return res
+    },
+
+    onSuccess: () => {
+      console.log("Agendamento criado")
+
+      form.reset()
+      setCategoria("")
+      setEspecialistaId("")
+
+    },
+
+    onError: (err: any) => {
+      console.log("Erro:", err.message)
+    },
+  })
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -71,28 +108,90 @@ export function AgendamentoDialog() {
       cpf: "",
       endereco: "",
       contato: "",
+      categoria: "",
       servico: "",
       especialista: "",
-      data: "",
+      date: "",
       hora: "",
     },
   })
 
+
+
+  const selectedDate = form.watch("date")
+
+  useEffect(() => {
+    carregarHorarios(selectedDate, especialistaId)
+  }, [selectedDate, especialistaId])
+
+  async function carregarHorarios(date: string, professionalId: string) {
+    if (!date || !professionalId) return
+
+    const [year, month, day] = date.split("-").map(Number)
+    const parsedDate = new Date(year, month - 1, day)
+
+    const res = await getAvailableTime({
+      professionalId,
+      date: parsedDate,
+    })
+
+    if (res?.data) {
+      setAvailableTimes(res.data)
+    }
+  }
+
   const error = form.formState.errors
 
   const onSubmit = (data: FormSchema) => {
-    console.log(data)
+
+    const [year, month, day] = data.date.split("-").map(Number)
+    const [hours, minutes] = data.hora.split(":").map(Number)
+    const date = new Date(year, month - 1, day)
+    const time = new Date(1970, 0, 1, hours, minutes)
+
+    const selectedProfessional = professionals?.find(
+      (p) => p.id === especialistaId
+    )
+
+
+    if (!professionals || !selectedProfessional) {
+      console.log("Profissional não disponível")
+      return
+    }
+
+    const mapped = {
+      // ...data,
+      clinicId: selectedProfessional?.clinicId,
+      professionalId: selectedProfessional?.id,
+      patientId: "0b010535-4581-42b1-be08-5b50d971b626",
+      date: date,
+      time: time,
+      services: [data.servico],
+    }
+    console.log("agendadov:", mapped)
+    mutation.mutate(mapped)
   }
 
-  const servicos = [
-    { value: "dentista", label: "Dentista" },
-    { value: "ortopedista", label: "Ortopedista" },
-  ]
 
-  const especialistas: Record<string, any[]> = {
-    dentista: [{ value: "jose", label: "Dr. José" }],
-    ortopedista: [{ value: "carlos", label: "Dr. Carlos" }],
-  }
+  const { data: professionals, isLoading } = useQuery({
+    queryKey: ["professionals"],
+    queryFn: getProfessionals,
+  })
+
+
+
+  const categorias = Array.from(
+    new Set(
+      (professionals ?? [])
+        .map((p) => p.specialty)
+        .filter((s): s is string => !!s)
+    )
+  )
+
+  const filteredProfessionals = (professionals ?? []).filter(
+    (p) => p.specialty === categoria
+  )
+
 
   return (
     <Dialog>
@@ -109,26 +208,31 @@ export function AgendamentoDialog() {
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-col gap-2"
         >
-          {/* NOME */}
+
           <Input placeholder="Nome Completo" {...form.register("nome")} />
           {error.nome && (
             <span className="text-alert text-xs">{error.nome.message}</span>
           )}
 
-          {/* CPF */}
-          <Input
-            placeholder="CPF"
-            value={form.watch("cpf")}
-            onChange={(e) => {
-              const formatted = formatCPF(e.target.value).slice(0, 14)
-              form.setValue("cpf", formatted)
-            }}
+
+          <Controller
+            control={form.control}
+            name="cpf"
+            render={({ field }) => (
+              <Input
+                placeholder="CPF"
+                value={formatCPF(field.value || "")}
+                onChange={(e) => {
+                  const raw = unmask(e.target.value).slice(0, 11)
+                  field.onChange(raw)
+                }}
+              />
+            )}
           />
           {error.cpf && (
             <span className="text-alert text-xs">{error.cpf.message}</span>
           )}
 
-          {/* ENDEREÇO */}
           <Input placeholder="Endereço" {...form.register("endereco")} />
           {error.endereco && (
             <span className="text-alert text-xs">
@@ -136,14 +240,19 @@ export function AgendamentoDialog() {
             </span>
           )}
 
-          {/* TELEFONE */}
-          <Input
-            placeholder="Contato"
-            value={form.watch("contato")}
-            onChange={(e) => {
-              const formatted = formatTelefone(e.target.value).slice(0, 15)
-              form.setValue("contato", formatted)
-            }}
+          <Controller
+            control={form.control}
+            name="contato"
+            render={({ field }) => (
+              <Input
+                placeholder="Contato"
+                value={formatTelefone(field.value || "")}
+                onChange={(e) => {
+                  const raw = unmask(e.target.value).slice(0, 11)
+                  field.onChange(raw)
+                }}
+              />
+            )}
           />
           {error.contato && (
             <span className="text-alert text-xs">
@@ -151,69 +260,100 @@ export function AgendamentoDialog() {
             </span>
           )}
 
-          {/* SERVIÇO */}
           <Select
+            value={categoria}
             onValueChange={(v) => {
-              setServico(v)
-              setEspecialista("")
-              form.setValue("servico", v)
+              setCategoria(v)
+              setEspecialistaId("")
+              form.setValue("categoria", v)
+              form.setValue("servico", "")
             }}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Serviço" />
+              <SelectValue placeholder="Especialidade" />
             </SelectTrigger>
 
             <SelectContent>
-              {servicos.map((s) => (
-                <SelectItem key={s.value} value={s.value}>
-                  {s.label}
+
+              {isLoading && (
+                <SelectItem value="loading">Carregando...</SelectItem>
+              )}
+              {!isLoading && categorias?.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
                 </SelectItem>
               ))}
+
+
             </SelectContent>
           </Select>
-          {error.servico && (
+          {error.categoria && (
             <span className="text-alert text-xs">
-              {error.servico.message}
+              {error.categoria.message}
             </span>
           )}
 
-          {/* ESPECIALISTA */}
+
           <Select
-            value={especialista}
+            value={especialistaId}
             onValueChange={(v) => {
-              setEspecialista(v)
+              setEspecialistaId(v)
               form.setValue("especialista", v)
             }}
-            disabled={!servico}
+            disabled={!categoria}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Especialista" />
             </SelectTrigger>
 
             <SelectContent>
-              {(especialistas[servico] || []).map((e) => (
-                <SelectItem key={e.value} value={e.value}>
-                  {e.label}
+              {filteredProfessionals.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.user.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {error.especialista && (
-            <span className="text-alert text-xs">
-              {error.especialista.message}
-            </span>
+
+
+          <Input type="date" {...form.register("date")} />
+          {error.date && (
+            <span className="text-alert text-xs">{error.date.message}</span>
           )}
 
-          {/* DATA */}
-          <Input type="date" {...form.register("data")} />
-          {error.data && (
-            <span className="text-alert text-xs">{error.data.message}</span>
-          )}
+          <Select
+            value={form.watch("hora")}
+            onValueChange={(v) => form.setValue("hora", v)}
+            disabled={!availableTimes.length}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Horário disponível" />
+            </SelectTrigger>
 
-          {/* HORA */}
-          <Input type="time" {...form.register("hora")} />
+            <SelectContent>
+              {availableTimes.length === 0 ? (
+                <SelectItem value="empty" disabled>
+                  Nenhum horário disponível
+                </SelectItem>
+              ) : (
+                availableTimes.map((time) => (
+                  <SelectItem key={time} value={time}>
+                    {time}
+                  </SelectItem>
+                ))
+              )}
+
+            </SelectContent>
+          </Select>
           {error.hora && (
             <span className="text-alert text-xs">{error.hora.message}</span>
+          )}
+
+          <Input placeholder="Serviço" {...form.register("servico")} />
+          {error.servico && (
+            <span className="text-alert text-xs">
+              {error.servico.message}
+            </span>
           )}
 
           <DialogFooter>
