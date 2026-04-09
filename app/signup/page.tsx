@@ -12,6 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction } from "next-safe-action/hooks";
 import { register } from "@/actions/auth/register";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/toast";
 
 import z from "zod";
 import { Eye, EyeOff } from "lucide-react";
@@ -52,19 +53,34 @@ export default function SignupPage() {
     },
   });
 
+  const toast = useToast();
+
   const { execute, status } = useAction(register, {
     onSuccess: (result) => {
       if (result?.data?.message) {
-        //trocar por toast de sucesso da página
-        alert(result.data.message);
+        toast.success(result.data.message);
       }
 
       router.push("/dashboard");
       router.refresh();
     },
     onError: ({ error }) => {
-      //trocar por toast de erro
-      console.log("Server error:", error.serverError);
+      if (error?.validationErrors) {
+        Object.entries(error.validationErrors).forEach(([k, v]: any) => {
+          form.setError(k as any, { type: "server", message: (v as string[]).join(" ") });
+        });
+        if (error?._errors && Array.isArray(error._errors)) {
+          toast.error("Erro", String(error._errors.join(" ")));
+        }
+        return;
+      }
+
+      if (error?.serverError) {
+        toast.error(String(error.serverError));
+        return;
+      }
+
+      toast.error("Erro ao processar a requisição");
     },
   });
 

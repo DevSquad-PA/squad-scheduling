@@ -2,7 +2,7 @@
 
 import { Input } from "@/components/ui/input"
 import { Search, ChevronLeft, ChevronRight, UserPen } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { AgendamentoDialog } from "./components/AgendamentoPopup"
 
 type Agendamento = {
@@ -15,26 +15,29 @@ type Agendamento = {
 export default function Dashboard() {
   const [search, setSearch] = useState("")
   const [dataAtual, setDataAtual] = useState(new Date())
-  const exemplo: Agendamento[] = [
-    {
-      nome: "José Maria da Silva",
-      data: "27/03/2026",
-      hora: "14:00",
-      descricao: "Atendimento com dentista.",
-    },
-    {
-      nome: "Lucas Fernandes Ribeiro",
-      data: "27/03/2026",
-      hora: "14:00",
-      descricao: "Atendimento com dentista.",
-    },
-    {
-      nome: "Maria Santana de Lopez",
-      data: "28/03/2026",
-      hora: "15:00",
-      descricao: "Cirurgia com ortopedista.",
-    },
-  ]
+  const [exemplo, setExemplo] = useState<Agendamento[]>([]);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch("/api/appointments");
+        if (!res.ok) return;
+        const data = await res.json();
+        // map API response to Agendamento shape
+        const mapped: Agendamento[] = data.map((a: any) => ({
+          nome: a.patient_name || a.professional_name || "---",
+          data: new Date(a.appointment_date).toLocaleDateString("pt-BR"),
+          hora: a.appointment_time ?? "",
+          descricao: a.services ?? "",
+        }));
+        setExemplo(mapped);
+      } catch (e) {
+        // ignore for now
+      }
+    }
+
+    load();
+  }, []);
 
 
   function formatarData(date: Date) {

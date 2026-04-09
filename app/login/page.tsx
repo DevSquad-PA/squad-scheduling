@@ -11,6 +11,7 @@ import { login } from "@/actions/auth/login";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { Eye, EyeOff } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 const formSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -33,21 +34,36 @@ export default function Login() {
     },
   });
 
+  const toast = useToast();
+
   const { execute, status } = useAction(login, {
     onSuccess: async (result) => {
       if (result?.data?.message) {
-        //trocar por toast de sucesso da página
-        alert(result.data.message);
+        toast.success(result.data.message);
       }
 
       router.push("/dashboard");
       router.refresh();
     },
     onError: ({ error }) => {
-      if (error.serverError) {
-        //trocar por toast de erro da página
-        console.log("Server error:", error.serverError);
+      // validation errors from server
+      if (error?.validationErrors) {
+        Object.entries(error.validationErrors).forEach(([k, v]: any) => {
+          form.setError(k as any, { type: "server", message: (v as string[]).join(" ") });
+        });
+        if (error?._errors && Array.isArray(error._errors)) {
+          toast.error("Erro", String(error._errors.join(" ")));
+        }
+        return;
       }
+
+      if (error?.serverError) {
+        toast.error(String(error.serverError));
+        return;
+      }
+
+      // fallback
+      toast.error("Erro ao processar a requisição");
     },
   });
 
