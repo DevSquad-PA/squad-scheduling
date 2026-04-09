@@ -24,10 +24,35 @@ export default function Dashboard() {
         if (!res.ok) return;
         const data = await res.json();
         // map API response to Agendamento shape
+        const formatHora = (v: any) => {
+          if (!v) return "";
+          try {
+            // ISO datetime like 1970-01-01T08:00:00.000Z
+            if (typeof v === "string" && v.includes("T")) {
+              const d = new Date(v);
+              return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false });
+            }
+            // time-only string like "08:00:00" or "08:00"
+            if (typeof v === "string" && /^\d{2}:\d{2}(:\d{2})?$/.test(v)) {
+              return v.split(":").slice(0, 2).join(":");
+            }
+            // Date object
+            if (v instanceof Date) {
+              return v.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false });
+            }
+            // fallback
+            const d = new Date(String(v));
+            if (!Number.isNaN(d.getTime())) {
+              return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false });
+            }
+          } catch (e) {}
+          return String(v).substring(0,5);
+        };
+
         const mapped: Agendamento[] = data.map((a: any) => ({
           nome: a.patient_name || a.professional_name || "---",
           data: new Date(a.appointment_date).toLocaleDateString("pt-BR"),
-          hora: a.appointment_time ?? "",
+          hora: formatHora(a.appointment_time),
           descricao: a.services ?? "",
         }));
         setExemplo(mapped);
@@ -140,7 +165,7 @@ export default function Dashboard() {
           <p className="truncate">{e.nome}</p>
           <p className="truncate">{e.descricao}</p>
           <p className="whitespace-nowrap">
-            às {e.hora} horas
+            {e.data}{e.hora ? ` às ${e.hora}` : ""}
           </p>
 
           <button className="cursor-pointer">
