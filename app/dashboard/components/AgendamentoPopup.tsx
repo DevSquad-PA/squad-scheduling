@@ -121,6 +121,10 @@ export function AgendamentoDialog() {
   const selectedDate = form.watch("date")
 
   useEffect(() => {
+    form.setValue("hora", "")
+  }, [selectedDate])
+
+  useEffect(() => {
     carregarHorarios(selectedDate, especialistaId)
   }, [selectedDate, especialistaId])
 
@@ -293,61 +297,67 @@ export function AgendamentoDialog() {
             </span>
           )}
 
+          {categoria &&
+            <Select
+              value={especialistaId}
+              onValueChange={(v) => {
+                setEspecialistaId(v)
+                form.setValue("especialista", v)
+              }}
+              disabled={!categoria}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Especialista" />
+              </SelectTrigger>
 
-          <Select
-            value={especialistaId}
-            onValueChange={(v) => {
-              setEspecialistaId(v)
-              form.setValue("especialista", v)
-            }}
-            disabled={!categoria}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Especialista" />
-            </SelectTrigger>
-
-            <SelectContent>
-              {filteredProfessionals.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.user.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-
-          <Input type="date" {...form.register("date")} />
-          {error.date && (
-            <span className="text-alert text-xs">{error.date.message}</span>
-          )}
-
-          <Select
-            value={form.watch("hora")}
-            onValueChange={(v) => form.setValue("hora", v)}
-            disabled={!availableTimes.length}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Horário disponível" />
-            </SelectTrigger>
-
-            <SelectContent>
-              {availableTimes.length === 0 ? (
-                <SelectItem value="empty" disabled>
-                  Nenhum horário disponível
-                </SelectItem>
-              ) : (
-                availableTimes.map((time) => (
-                  <SelectItem key={time} value={time}>
-                    {time}
+              <SelectContent>
+                {filteredProfessionals.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.user.name}
                   </SelectItem>
-                ))
-              )}
+                ))}
+              </SelectContent>
+            </Select>
+          }
 
-            </SelectContent>
-          </Select>
-          {error.hora && (
-            <span className="text-alert text-xs">{error.hora.message}</span>
-          )}
+          {especialistaId &&
+            <>
+              <Input type="date" {...form.register("date")} />
+              {error.date && (
+                <span className="text-alert text-xs">{error.date.message}</span>
+              )}
+            </>}
+
+          {especialistaId && selectedDate && <>
+            <Select
+              value={form.watch("hora")}
+              onValueChange={(v) => form.setValue("hora", v)}
+              disabled={!availableTimes.length}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Horário disponível" />
+              </SelectTrigger>
+
+              <SelectContent>
+                {availableTimes.length === 0 ? (
+                  <SelectItem value="empty" disabled>
+                    Nenhum horário disponível
+                  </SelectItem>
+                ) : (
+                  availableTimes.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      {time}
+                    </SelectItem>
+                  ))
+                )}
+
+              </SelectContent>
+            </Select>
+            {error.hora && (
+              <span className="text-alert text-xs">{error.hora.message}</span>
+            )}
+          </>
+          }
 
           <Input placeholder="Serviço" {...form.register("servico")} />
           {error.servico && (
