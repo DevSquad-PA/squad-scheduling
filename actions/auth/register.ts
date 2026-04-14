@@ -113,15 +113,25 @@ export const register = actionClient
         const cleanPhone = phone.replace(/\D/g, "");
         const birthDate = new Date(dateOfBirth);
         
+        const nameParts = name.trim().split(" ");
+        const firstName = nameParts[0];
+        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : null;
+
+        console.log("Updating user details for:", result.user.id);
+        
         await prisma.user.update({
           where: { id: result.user.id },
           data: {
-            emailVerified: true,
+            emailVerified: true, // Auto verify since no verification logic is present
             cpf: cleanCPF,
             dateOfBirth: birthDate,
             phone: cleanPhone,
+            firstName,
+            lastName
           },
         });
+      } else {
+        console.error("No user ID returned from signUpEmail! BetterAuth payload:", result);
       }
 
       return {
