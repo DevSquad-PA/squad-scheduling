@@ -65,13 +65,13 @@ export default function SignupPage() {
       router.refresh();
     },
     onError: ({ error }) => {
-<<<<<<< HEAD
       if (error?.validationErrors) {
         Object.entries(error.validationErrors).forEach(([k, v]: any) => {
           form.setError(k as any, { type: "server", message: (v as string[]).join(" ") });
         });
-        if (error?._errors && Array.isArray(error._errors)) {
-          toast.error("Erro", String(error._errors.join(" ")));
+        const errs = (error as any)._errors as string[] | undefined;
+        if (errs && Array.isArray(errs) && errs.length) {
+          toast.error(errs.join(" "));
         }
         return;
       }
@@ -82,19 +82,6 @@ export default function SignupPage() {
       }
 
       toast.error("Erro ao processar a requisição");
-=======
-      console.log("Erro completo da action:", error);
-      
-      if (error.validationErrors) {
-        // Pega todos os erros de validação com o flat
-        const errorMessages = Object.values(error.validationErrors).flat();
-        alert("Erro de validação:\n" + errorMessages.join("\n"));
-      } else if (error.serverError) {
-        alert("Erro no servidor: " + error.serverError);
-      } else {
-        alert("Erro desconhecido ao cadastrar.");
-      }
->>>>>>> origin/main
     },
   });
 
