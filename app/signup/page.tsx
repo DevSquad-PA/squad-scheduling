@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { PhoneInput } from "@/app/components/PhoneInput";
+import { PhoneInput } from "@/app/dashboard/components/PhoneInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -82,10 +82,10 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="bg-bg flex min-h-screen items-center justify-center p-4">
-      <Card className="bg-surface w-full max-w-md">
+    <div className="bg-bg flex min-h-screen items-center justify-center">
+      <Card className="bg-surface w-full max-w-md p-4 py-8">
         <CardHeader>
-          <CardTitle className="text-text2 mb-8 w-full px-4 py-8 text-center text-[24px] font-bold opacity-100">
+          <CardTitle className="text-text2 w-full pb-4 text-center text-[24px] font-bold opacity-100">
             Cadastro
           </CardTitle>
         </CardHeader>
@@ -93,22 +93,37 @@ export default function SignupPage() {
         <CardContent>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-3"
           >
             <div>
-              <Input {...form.register("name")} placeholder="Nome completo" />
+              <Input
+                {...form.register("name")}
+                placeholder="Nome completo"
+                className="placeholder:text-primary text-text"
+              />
             </div>
 
             <div>
-              <Input {...form.register("cpf")} placeholder="CPF" />
+              <Input
+                {...form.register("cpf")}
+                placeholder="CPF"
+                className="placeholder:text-primary text-text"
+              />
             </div>
 
             <div>
-              <Input type="date" {...form.register("dateOfBirth")} />
+              <Input
+                type="date"
+                {...form.register("dateOfBirth")}
+                className="placeholder:text-primary text-text"
+              />
             </div>
 
             <div>
-              <PhoneInput {...form.register("phone")} />
+              <PhoneInput
+                {...form.register("phone")}
+                className="placeholder:text-primary text-text"
+              />
             </div>
 
             <div>
@@ -116,6 +131,7 @@ export default function SignupPage() {
                 type="email"
                 {...form.register("email")}
                 placeholder="Email"
+                className="placeholder:text-primary text-text"
               />
             </div>
 
@@ -123,7 +139,7 @@ export default function SignupPage() {
               <Input
                 type={showPassword ? "text" : "password"}
                 placeholder="Senha"
-                className="pr-10"
+                className="placeholder:text-primary text-text pr-10"
                 {...form.register("password")}
               />
 
@@ -146,8 +162,8 @@ export default function SignupPage() {
               <Input
                 type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirmar senha"
-                className="pr-10"
                 {...form.register("confirmPassword")}
+                className="placeholder:text-primary text-text pr-10"
               />
 
               {showConfirmPassword ? (
@@ -173,7 +189,11 @@ export default function SignupPage() {
               {status === "executing" ? "Cadastrando..." : "Cadastrar"}
             </Button>
             <Link href="/login">
-              <Button type="button" variant="transparent" className="w-full">
+              <Button
+                type="button"
+                variant="transparent"
+                className="border-primary w-full"
+              >
                 Voltar ao login
               </Button>
             </Link>

@@ -14,7 +14,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { PhoneInput } from "@/app/components/PhoneInput";
+import { PhoneInput } from "@/app/dashboard/components/PhoneInput";
 
 type Professional = {
   id_profissional: string;

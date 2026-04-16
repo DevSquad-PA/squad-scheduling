@@ -57,8 +57,8 @@ export default function Login() {
 
   return (
     <main className="bg-bg flex h-screen items-center justify-center">
-      <section className="bg-surface flex h-full w-full flex-col gap-3 rounded-none px-8 py-16 opacity-100 sm:h-108 sm:w-86 sm:rounded-[20px]">
-        <h2 className="text-text2 mb-8 w-full text-center text-[24px] font-bold">
+      <section className="bg-surface flex w-full flex-col gap-3 rounded-none p-8 opacity-100 sm:w-86 sm:rounded-[20px]">
+        <h2 className="text-text2 w-full pb-4 text-center text-[24px] font-bold">
           Login
         </h2>
 
@@ -66,13 +66,19 @@ export default function Login() {
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex w-full flex-col items-center justify-center gap-3"
         >
-          <Input type="email" placeholder="Email" {...form.register("email")} />
+          <Input
+            type="email"
+            placeholder="Email"
+            {...form.register("email")}
+            className="text-text"
+          />
 
           <div className="relative flex w-full">
             <Input
               placeholder="Senha"
               type={showPassword ? "text" : "password"}
               {...form.register("password")}
+              className="text-text"
             />
 
             {showPassword && (
@@ -91,7 +97,7 @@ export default function Login() {
 
           <Link
             href=""
-            className="text-text2 hover:text-text flex w-full justify-center gap-2 py-1 text-base"
+            className="text-text2 hover:text-text flex w-full justify-center text-base"
           >
             Esqueci a senha
           </Link>
@@ -105,7 +111,7 @@ export default function Login() {
           </Button>
         </form>
 
-        <Button variant="transparent" asChild>
+        <Button variant="transparent" asChild className="border-primary">
           <Link href="/signup">Cadastrar</Link>
         </Button>
       </section>
