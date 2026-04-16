@@ -67,7 +67,10 @@ export default function SignupPage() {
     onError: ({ error }) => {
       if (error?.validationErrors) {
         Object.entries(error.validationErrors).forEach(([k, v]: any) => {
-          form.setError(k as any, { type: "server", message: (v as string[]).join(" ") });
+          form.setError(k as any, {
+            type: "server",
+            message: (v as string[]).join(" "),
+          });
         });
         const errs = (error as any)._errors as string[] | undefined;
         if (errs && Array.isArray(errs) && errs.length) {

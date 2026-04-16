@@ -86,7 +86,7 @@ export default function SideBarAdmin({ children, user }: Props) {
             </SidebarMenuItem>
 
             <SidebarMenuItem>
-              <Link href="">
+              <Link href="/dashboard/professionals">
                 <SidebarMenuButton>
                   <UserRoundPlus />
                   Profissionais
