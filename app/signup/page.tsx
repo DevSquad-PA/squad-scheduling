@@ -63,8 +63,17 @@ export default function SignupPage() {
       router.refresh();
     },
     onError: ({ error }) => {
-      //trocar por toast de erro
-      console.log("Server error:", error.serverError);
+      console.log("Erro completo da action:", error);
+      
+      if (error.validationErrors) {
+        // Pega todos os erros de validação com o flat
+        const errorMessages = Object.values(error.validationErrors).flat();
+        alert("Erro de validação:\n" + errorMessages.join("\n"));
+      } else if (error.serverError) {
+        alert("Erro no servidor: " + error.serverError);
+      } else {
+        alert("Erro desconhecido ao cadastrar.");
+      }
     },
   });
 
