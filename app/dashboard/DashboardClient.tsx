@@ -64,13 +64,17 @@ export default function DashboardClient({ initial }: { initial: Agendamento[] })
     return matchData && matchSearch
   })
 
+  function handleCreate(a: Agendamento) {
+    setExemplo((prev) => [a, ...(prev || [])])
+  }
+
   return (
     <div className="p-8 flex flex-col gap-4">
       <h2 className="font-bold text-base mb-2">Agendamentos</h2>
 
 
       <div className="flex items-center gap-4">
-        <AgendamentoDialog />
+        <AgendamentoDialog onCreate={handleCreate} />
 
         <div className="relative w-fit">
           <Input

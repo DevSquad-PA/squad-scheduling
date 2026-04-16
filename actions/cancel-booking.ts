@@ -20,6 +20,7 @@ export const cancelAppointment = protectedActionClient
       },
       include: {
         patient: true,
+        professional: true,
       },
     });
 
@@ -29,8 +30,14 @@ export const cancelAppointment = protectedActionClient
       });
     }
 
-    // alterar para user admin ou outra role deletar um agendamento
-    if (appointment.patient.userId !== user.id) {
+    // permitir que o profissional responsável cancele, ou um membro da clínica (ex: admin)
+    const isProfessionalOwner = appointment.professional && appointment.professional.userId === user.id;
+
+    const clinicMember = await prisma.clinicMember.findFirst({
+      where: { userId: user.id, clinicId: appointment.clinicId },
+    });
+
+    if (!isProfessionalOwner && !clinicMember) {
       returnValidationErrors(inputSchema, {
         _errors: ["Você não tem permissão para cancelar este agendamento."],
       });

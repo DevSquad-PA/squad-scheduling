@@ -53,6 +53,8 @@ export default function SignupPage() {
     },
   });
 
+  const errors = form.formState.errors;
+
   const toast = useToast();
 
   const { execute, status } = useAction(register, {
@@ -105,18 +107,30 @@ export default function SignupPage() {
           >
             <div>
               <Input {...form.register("name")} placeholder="Nome completo" />
+              {errors.name && (
+                <span className="text-alert text-xs">{errors.name.message}</span>
+              )}
             </div>
 
             <div>
               <Input {...form.register("cpf")} placeholder="CPF" />
+              {errors.cpf && (
+                <span className="text-alert text-xs">{errors.cpf.message}</span>
+              )}
             </div>
 
             <div>
               <Input type="date" {...form.register("dateOfBirth")} />
+              {errors.dateOfBirth && (
+                <span className="text-alert text-xs">{errors.dateOfBirth.message}</span>
+              )}
             </div>
 
             <div>
               <PhoneInput {...form.register("phone")} />
+              {errors.phone && (
+                <span className="text-alert text-xs">{errors.phone.message}</span>
+              )}
             </div>
 
             <div>
@@ -125,6 +139,9 @@ export default function SignupPage() {
                 {...form.register("email")}
                 placeholder="Email"
               />
+              {errors.email && (
+                <span className="text-alert text-xs">{errors.email.message}</span>
+              )}
             </div>
 
             <div className="relative">
@@ -134,6 +151,10 @@ export default function SignupPage() {
                 className="pr-10"
                 {...form.register("password")}
               />
+
+              {errors.password && (
+                <span className="text-alert text-xs">{errors.password.message}</span>
+              )}
 
               {showPassword ? (
                 <EyeOff
@@ -158,6 +179,9 @@ export default function SignupPage() {
                 {...form.register("confirmPassword")}
               />
 
+              {errors.confirmPassword && (
+                <span className="text-alert text-xs">{errors.confirmPassword.message}</span>
+              )}
               {showConfirmPassword ? (
                 <EyeOff
                   onClick={() => setShowConfirmPassword(false)}

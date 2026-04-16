@@ -34,6 +34,8 @@ export default function Login() {
     },
   });
 
+  const errors = form.formState.errors;
+
   const toast = useToast();
 
   const { execute, status } = useAction(login, {
@@ -51,8 +53,9 @@ export default function Login() {
         Object.entries(error.validationErrors).forEach(([k, v]: any) => {
           form.setError(k as any, { type: "server", message: (v as string[]).join(" ") });
         });
-        if (error?._errors && Array.isArray(error._errors)) {
-          toast.error("Erro", String(error._errors.join(" ")));
+        const topErrors = (error as any)?._errors;
+        if (topErrors && Array.isArray(topErrors)) {
+          toast.error("Erro", String(topErrors.join(" ")));
         }
         return;
       }
@@ -83,6 +86,9 @@ export default function Login() {
           className="flex w-full flex-col items-center justify-center gap-3"
         >
           <Input type="email" placeholder="Email" {...form.register("email")} />
+          {errors.email && (
+            <span className="text-alert text-xs">{errors.email.message}</span>
+          )}
 
           <div className="relative flex w-full">
             <Input
@@ -90,6 +96,9 @@ export default function Login() {
               type={showPassword ? "text" : "password"}
               {...form.register("password")}
             />
+            {errors.password && (
+              <span className="text-alert text-xs">{errors.password.message}</span>
+            )}
 
             {showPassword && (
               <Eye

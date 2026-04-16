@@ -22,6 +22,9 @@ import {
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import z from "zod"
+import { useAction } from "next-safe-action/hooks"
+import { useRouter } from "next/navigation"
+import { createAppointment } from "@/actions/create-booking"
 
 // =======================
 // ✅ ZOD
@@ -60,9 +63,17 @@ function formatTelefone(value: string) {
 // =======================
 // COMPONENTE
 // =======================
-export function AgendamentoDialog() {
+type Agendamento = {
+  nome: string
+  data: string
+  hora: string
+  descricao: string
+}
+
+export function AgendamentoDialog({ onCreate }: { onCreate?: (a: Agendamento) => void }) {
   const [servico, setServico] = useState("")
   const [especialista, setEspecialista] = useState("")
+  const [open, setOpen] = useState(false)
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -80,8 +91,36 @@ export function AgendamentoDialog() {
 
   const error = form.formState.errors
 
+  const { execute, status } = useAction(createAppointment, {
+    onSuccess: (result) => {
+      if (result?.data?.appointment) {
+        if (onCreate) onCreate(result.data.appointment)
+      }
+      try {
+        router.refresh()
+      } catch (e) {}
+      setOpen(false)
+      form.reset()
+    },
+    onError: ({ error }) => {
+      console.error('Erro criando agendamento (action):', error)
+      alert((error as any)?.serverError || 'Erro ao criar agendamento')
+    }
+  })
+
   const onSubmit = (data: FormSchema) => {
-    console.log(data)
+    execute({
+      professionalId: undefined,
+      patient: {
+        nome: data.nome,
+        cpf: data.cpf,
+        endereco: data.endereco,
+        contato: data.contato,
+      },
+      date: data.data,
+      time: data.hora,
+      services: [data.servico],
+    })
   }
 
   const servicos = [
@@ -95,7 +134,7 @@ export function AgendamentoDialog() {
   }
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="themegreen" className="w-fit">+ Agendar</Button>
       </DialogTrigger>
