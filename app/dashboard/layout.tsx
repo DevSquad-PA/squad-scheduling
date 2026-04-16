@@ -8,7 +8,6 @@ export default async function Layout({ children }: any) {
     headers: await headers()
   })
 
-  console.log("SESSION:", session)
   if (!session) {
     redirect("/login")
   }
