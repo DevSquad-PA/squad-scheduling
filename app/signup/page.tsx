@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { PhoneInput } from "@/app/components/PhoneInput";
+import { PhoneInput } from "@/app/dashboard/components/PhoneInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

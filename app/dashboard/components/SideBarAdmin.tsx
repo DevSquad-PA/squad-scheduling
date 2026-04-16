@@ -102,7 +102,7 @@ export default function SideBarAdmin({ children, user }: Props) {
                             <Link href="">
                                 <SidebarMenuButton>
                                     <UserRoundPlus />
-                                    Cadastrar
+                                    Profissionais
                                 </SidebarMenuButton>
                             </Link>
                         </SidebarMenuItem>
