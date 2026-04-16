@@ -51,9 +51,7 @@ export default function Login() {
         Object.entries(error.validationErrors).forEach(([k, v]: any) => {
           form.setError(k as any, { type: "server", message: (v as string[]).join(" ") });
         });
-        if (error?._errors && Array.isArray(error._errors)) {
-          toast.error("Erro", String(error._errors.join(" ")));
-        }
+      
         return;
       }
 
