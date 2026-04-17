@@ -46,7 +46,6 @@ export default function Login() {
       router.refresh();
     },
     onError: ({ error }) => {
-      // validation errors from server
       if (error?.validationErrors) {
         Object.entries(error.validationErrors).forEach(([k, v]: any) => {
           form.setError(k as any, {
@@ -63,7 +62,6 @@ export default function Login() {
         return;
       }
 
-      // fallback
       toast.error("Erro ao processar a requisição");
     },
   });
