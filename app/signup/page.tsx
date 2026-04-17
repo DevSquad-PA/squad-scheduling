@@ -112,6 +112,11 @@ export default function SignupPage() {
                 placeholder="Nome completo"
                 className="placeholder:text-primary text-text"
               />
+              {form.formState.errors.name && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.name.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -120,6 +125,11 @@ export default function SignupPage() {
                 placeholder="CPF"
                 className="placeholder:text-primary text-text"
               />
+              {form.formState.errors.cpf && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.cpf.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -128,6 +138,11 @@ export default function SignupPage() {
                 {...form.register("dateOfBirth")}
                 className="placeholder:text-primary text-text"
               />
+              {form.formState.errors.dateOfBirth && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.dateOfBirth.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -135,6 +150,11 @@ export default function SignupPage() {
                 {...form.register("phone")}
                 className="placeholder:text-primary text-text"
               />
+              {form.formState.errors.phone && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.phone.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -144,51 +164,72 @@ export default function SignupPage() {
                 placeholder="Email"
                 className="placeholder:text-primary text-text"
               />
-            </div>
-
-            <div className="relative">
-              <Input
-                type={showPassword ? "text" : "password"}
-                placeholder="Senha"
-                className="placeholder:text-primary text-text pr-10"
-                {...form.register("password")}
-              />
-
-              {showPassword ? (
-                <EyeOff
-                  onClick={() => setShowPassword(false)}
-                  className="text-text2 absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
-                  size={18}
-                />
-              ) : (
-                <Eye
-                  onClick={() => setShowPassword(true)}
-                  className="text-text2 absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
-                  size={18}
-                />
+              {form.formState.errors.email && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.email.message}
+                </p>
               )}
             </div>
 
-            <div className="relative">
-              <Input
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirmar senha"
-                {...form.register("confirmPassword")}
-                className="placeholder:text-primary text-text pr-10"
-              />
+            <div className="flex flex-col">
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Senha"
+                  className="placeholder:text-primary text-text pr-10"
+                  {...form.register("password")}
+                />
 
-              {showConfirmPassword ? (
-                <EyeOff
-                  onClick={() => setShowConfirmPassword(false)}
-                  className="text-text2 absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
-                  size={18}
+                {showPassword ? (
+                  <EyeOff
+                    onClick={() => setShowPassword(false)}
+                    className="text-text2 absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
+                    size={18}
+                  />
+                ) : (
+                  <Eye
+                    onClick={() => setShowPassword(true)}
+                    className="text-text2 absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
+                    size={18}
+                  />
+                )}
+              </div>
+
+              {form.formState.errors.password && (
+                <p className="mt-1 text-sm text-red-500">
+                  {form.formState.errors.password.message}
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col">
+              <div className="relative">
+                <Input
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirmar senha"
+                  {...form.register("confirmPassword")}
+                  className="placeholder:text-primary text-text pr-10"
                 />
-              ) : (
-                <Eye
-                  onClick={() => setShowConfirmPassword(true)}
-                  className="text-text2 absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
-                  size={18}
-                />
+
+                {showConfirmPassword ? (
+                  <EyeOff
+                    onClick={() => setShowConfirmPassword(false)}
+                    className="text-text2 absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
+                    size={18}
+                  />
+                ) : (
+                  <Eye
+                    onClick={() => setShowConfirmPassword(true)}
+                    className="text-text2 absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
+                    size={18}
+                  />
+                )}
+              </div>
+
+              {form.formState.errors.confirmPassword && (
+                <p className="mt-1 text-sm text-red-500">
+                  {form.formState.errors.confirmPassword.message}
+                </p>
               )}
             </div>
 

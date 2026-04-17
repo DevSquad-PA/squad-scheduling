@@ -49,9 +49,12 @@ export default function Login() {
       // validation errors from server
       if (error?.validationErrors) {
         Object.entries(error.validationErrors).forEach(([k, v]: any) => {
-          form.setError(k as any, { type: "server", message: (v as string[]).join(" ") });
+          form.setError(k as any, {
+            type: "server",
+            message: (v as string[]).join(" "),
+          });
         });
-      
+
         return;
       }
 
@@ -87,25 +90,38 @@ export default function Login() {
             className="text-text"
           />
 
-          <div className="relative flex w-full">
-            <Input
-              placeholder="Senha"
-              type={showPassword ? "text" : "password"}
-              {...form.register("password")}
-              className="text-text"
-            />
+          {form.formState.errors.email && (
+            <p className="w-full text-sm text-red-500">
+              {form.formState.errors.email.message}
+            </p>
+          )}
 
-            {showPassword && (
-              <Eye
-                onClick={() => setShowPassword(!showPassword)}
-                className="text-text2 lucide lucide-eye-icon lucide-eye absolute top-1/2 right-5 -translate-y-1/2"
+          <div className="relative flex w-full flex-col">
+            <div className="relative flex w-full">
+              <Input
+                placeholder="Senha"
+                type={showPassword ? "text" : "password"}
+                {...form.register("password")}
+                className="text-text"
               />
-            )}
-            {!showPassword && (
-              <EyeOff
-                onClick={() => setShowPassword(!showPassword)}
-                className="lucide lucide-eye-off-icon lucide-eye-off text-text2 absolute top-1/2 right-5 -translate-y-1/2"
-              />
+
+              {showPassword ? (
+                <Eye
+                  onClick={() => setShowPassword(false)}
+                  className="text-text2 absolute top-1/2 right-5 -translate-y-1/2 cursor-pointer"
+                />
+              ) : (
+                <EyeOff
+                  onClick={() => setShowPassword(true)}
+                  className="text-text2 absolute top-1/2 right-5 -translate-y-1/2 cursor-pointer"
+                />
+              )}
+            </div>
+
+            {form.formState.errors.password && (
+              <p className="text-sm text-red-500">
+                {form.formState.errors.password.message}
+              </p>
             )}
           </div>
 
