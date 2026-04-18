@@ -33,7 +33,6 @@ model User {
 
   clinicMembers ClinicMember[]
   professionals Professional[]
-  patients      Patient[]
   auditLogs     AuditLog[]
 
   @@unique([email])
@@ -157,14 +156,28 @@ model Professional {
 // ==========================================
 
 model Patient {
-  id        String   @id @default(uuid()) @map("id_patient")
-  userId    String   @map("user_id")
-  clinicId  String   @map("clinic_id")
-  createdAt DateTime @default(now()) @map("created_at")
+  id            String    @id @default(uuid()) @map("id_patient")
+  clinicId      String    @map("clinic_id")
+  firstName     String    @map("first_name")
+  lastName      String    @map("last_name")
+  cpf           String?
+  dateOfBirth   DateTime? @map("date_of_birth") @db.Date
+  gender        String?
+  phone         String?
+  secondPhone   String?   @map("second_phone")
+  email         String?
+  zipCode       String?   @map("zip_code")
+  street        String?
+  addressNumber String?   @map("address_number")
+  complement    String?
+  neighborhood  String?
+  city          String?
+  state         String?
+  notes         String?   @db.Text
+  createdAt     DateTime  @default(now()) @map("created_at")
 
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  clinic       Clinic        @relation(fields: [clinicId], references: [id], onDelete: Cascade)
-  appointments Appointment[]
+  clinic        Clinic        @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  appointments  Appointment[]
 
   @@map("pat_patients")
 }
