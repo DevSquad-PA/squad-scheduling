@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { PhoneInput } from "@/app/components/PhoneInput";
+import { PhoneInput } from "@/app/dashboard/components/PhoneInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction } from "next-safe-action/hooks";
 import { register } from "@/actions/auth/register";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/toast";
 
 import z from "zod";
 import { Eye, EyeOff } from "lucide-react";
@@ -52,28 +53,38 @@ export default function SignupPage() {
     },
   });
 
+  const toast = useToast();
+
   const { execute, status } = useAction(register, {
     onSuccess: (result) => {
       if (result?.data?.message) {
-        //trocar por toast de sucesso da página
-        alert(result.data.message);
+        toast.success(result.data.message);
       }
 
       router.push("/dashboard");
       router.refresh();
     },
     onError: ({ error }) => {
-      console.log("Erro completo da action:", error);
-      
-      if (error.validationErrors) {
-        // Pega todos os erros de validação com o flat
-        const errorMessages = Object.values(error.validationErrors).flat();
-        alert("Erro de validação:\n" + errorMessages.join("\n"));
-      } else if (error.serverError) {
-        alert("Erro no servidor: " + error.serverError);
-      } else {
-        alert("Erro desconhecido ao cadastrar.");
+      if (error?.validationErrors) {
+        Object.entries(error.validationErrors).forEach(([k, v]: any) => {
+          form.setError(k as any, {
+            type: "server",
+            message: (v as string[]).join(" "),
+          });
+        });
+        const errs = (error as any)._errors as string[] | undefined;
+        if (errs && Array.isArray(errs) && errs.length) {
+          toast.error(errs.join(" "));
+        }
+        return;
       }
+
+      if (error?.serverError) {
+        toast.error(String(error.serverError));
+        return;
+      }
+
+      toast.error("Erro ao processar a requisição");
     },
   });
 
@@ -82,10 +93,10 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="bg-bg flex min-h-screen items-center justify-center p-4">
-      <Card className="bg-surface w-full max-w-md">
+    <div className="bg-bg flex min-h-screen items-center justify-center">
+      <Card className="bg-surface w-full max-w-md p-4 py-8">
         <CardHeader>
-          <CardTitle className="text-text2 mb-8 w-full px-4 py-8 text-center text-[24px] font-bold opacity-100">
+          <CardTitle className="text-text2 w-full pb-4 text-center text-[24px] font-bold opacity-100">
             Cadastro
           </CardTitle>
         </CardHeader>
@@ -93,22 +104,57 @@ export default function SignupPage() {
         <CardContent>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-3"
           >
             <div>
-              <Input {...form.register("name")} placeholder="Nome completo" />
+              <Input
+                {...form.register("name")}
+                placeholder="Nome completo"
+                className="placeholder:text-primary text-text"
+              />
+              {form.formState.errors.name && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.name.message}
+                </p>
+              )}
             </div>
 
             <div>
-              <Input {...form.register("cpf")} placeholder="CPF" />
+              <Input
+                {...form.register("cpf")}
+                placeholder="CPF"
+                className="placeholder:text-primary text-text"
+              />
+              {form.formState.errors.cpf && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.cpf.message}
+                </p>
+              )}
             </div>
 
             <div>
-              <Input type="date" {...form.register("dateOfBirth")} />
+              <Input
+                type="date"
+                {...form.register("dateOfBirth")}
+                className="placeholder:text-primary text-text"
+              />
+              {form.formState.errors.dateOfBirth && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.dateOfBirth.message}
+                </p>
+              )}
             </div>
 
             <div>
-              <PhoneInput {...form.register("phone")} />
+              <PhoneInput
+                {...form.register("phone")}
+                className="placeholder:text-primary text-text"
+              />
+              {form.formState.errors.phone && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.phone.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -116,52 +162,74 @@ export default function SignupPage() {
                 type="email"
                 {...form.register("email")}
                 placeholder="Email"
+                className="placeholder:text-primary text-text"
               />
-            </div>
-
-            <div className="relative">
-              <Input
-                type={showPassword ? "text" : "password"}
-                placeholder="Senha"
-                className="pr-10"
-                {...form.register("password")}
-              />
-
-              {showPassword ? (
-                <EyeOff
-                  onClick={() => setShowPassword(false)}
-                  className="text-text2 absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
-                  size={18}
-                />
-              ) : (
-                <Eye
-                  onClick={() => setShowPassword(true)}
-                  className="text-text2 absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
-                  size={18}
-                />
+              {form.formState.errors.email && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.email.message}
+                </p>
               )}
             </div>
 
-            <div className="relative">
-              <Input
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirmar senha"
-                className="pr-10"
-                {...form.register("confirmPassword")}
-              />
+            <div className="flex flex-col">
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Senha"
+                  className="placeholder:text-primary text-text pr-10"
+                  {...form.register("password")}
+                />
 
-              {showConfirmPassword ? (
-                <EyeOff
-                  onClick={() => setShowConfirmPassword(false)}
-                  className="text-text2 absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
-                  size={18}
+                {showPassword ? (
+                  <EyeOff
+                    onClick={() => setShowPassword(false)}
+                    className="text-text2 absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
+                    size={18}
+                  />
+                ) : (
+                  <Eye
+                    onClick={() => setShowPassword(true)}
+                    className="text-text2 absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
+                    size={18}
+                  />
+                )}
+              </div>
+
+              {form.formState.errors.password && (
+                <p className="mt-1 text-sm text-red-500">
+                  {form.formState.errors.password.message}
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col">
+              <div className="relative">
+                <Input
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirmar senha"
+                  {...form.register("confirmPassword")}
+                  className="placeholder:text-primary text-text pr-10"
                 />
-              ) : (
-                <Eye
-                  onClick={() => setShowConfirmPassword(true)}
-                  className="text-text2 absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
-                  size={18}
-                />
+
+                {showConfirmPassword ? (
+                  <EyeOff
+                    onClick={() => setShowConfirmPassword(false)}
+                    className="text-text2 absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
+                    size={18}
+                  />
+                ) : (
+                  <Eye
+                    onClick={() => setShowConfirmPassword(true)}
+                    className="text-text2 absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
+                    size={18}
+                  />
+                )}
+              </div>
+
+              {form.formState.errors.confirmPassword && (
+                <p className="mt-1 text-sm text-red-500">
+                  {form.formState.errors.confirmPassword.message}
+                </p>
               )}
             </div>
 
@@ -173,7 +241,11 @@ export default function SignupPage() {
               {status === "executing" ? "Cadastrando..." : "Cadastrar"}
             </Button>
             <Link href="/login">
-              <Button type="button" variant="transparent" className="w-full">
+              <Button
+                type="button"
+                variant="transparent"
+                className="border-primary w-full"
+              >
                 Voltar ao login
               </Button>
             </Link>

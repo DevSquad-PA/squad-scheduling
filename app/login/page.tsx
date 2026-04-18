@@ -11,6 +11,7 @@ import { login } from "@/actions/auth/login";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { Eye, EyeOff } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 const formSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -33,21 +34,35 @@ export default function Login() {
     },
   });
 
+  const toast = useToast();
+
   const { execute, status } = useAction(login, {
     onSuccess: async (result) => {
       if (result?.data?.message) {
-        //trocar por toast de sucesso da página
-        alert(result.data.message);
+        toast.success(result.data.message);
       }
 
       router.push("/dashboard");
       router.refresh();
     },
     onError: ({ error }) => {
-      if (error.serverError) {
-        //trocar por toast de erro da página
-        console.log("Server error:", error.serverError);
+      if (error?.validationErrors) {
+        Object.entries(error.validationErrors).forEach(([k, v]: any) => {
+          form.setError(k as any, {
+            type: "server",
+            message: (v as string[]).join(" "),
+          });
+        });
+
+        return;
       }
+
+      if (error?.serverError) {
+        toast.error(String(error.serverError));
+        return;
+      }
+
+      toast.error("Erro ao processar a requisição");
     },
   });
 
@@ -57,8 +72,8 @@ export default function Login() {
 
   return (
     <main className="bg-bg flex h-screen items-center justify-center">
-      <section className="bg-surface flex h-full w-full flex-col gap-3 rounded-none px-8 py-16 opacity-100 sm:h-108 sm:w-86 sm:rounded-[20px]">
-        <h2 className="text-text2 mb-8 w-full text-center text-[24px] font-bold">
+      <section className="bg-surface flex w-full flex-col gap-3 rounded-none p-8 opacity-100 sm:w-86 sm:rounded-[20px]">
+        <h2 className="text-text2 w-full pb-4 text-center text-[24px] font-bold">
           Login
         </h2>
 
@@ -66,32 +81,51 @@ export default function Login() {
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex w-full flex-col items-center justify-center gap-3"
         >
-          <Input type="email" placeholder="Email" {...form.register("email")} />
+          <Input
+            type="email"
+            placeholder="Email"
+            {...form.register("email")}
+            className="text-text"
+          />
 
-          <div className="relative flex w-full">
-            <Input
-              placeholder="Senha"
-              type={showPassword ? "text" : "password"}
-              {...form.register("password")}
-            />
+          {form.formState.errors.email && (
+            <p className="w-full text-sm text-red-500">
+              {form.formState.errors.email.message}
+            </p>
+          )}
 
-            {showPassword && (
-              <Eye
-                onClick={() => setShowPassword(!showPassword)}
-                className="text-text2 lucide lucide-eye-icon lucide-eye absolute top-1/2 right-5 -translate-y-1/2"
+          <div className="relative flex w-full flex-col">
+            <div className="relative flex w-full">
+              <Input
+                placeholder="Senha"
+                type={showPassword ? "text" : "password"}
+                {...form.register("password")}
+                className="text-text"
               />
-            )}
-            {!showPassword && (
-              <EyeOff
-                onClick={() => setShowPassword(!showPassword)}
-                className="lucide lucide-eye-off-icon lucide-eye-off text-text2 absolute top-1/2 right-5 -translate-y-1/2"
-              />
+
+              {showPassword ? (
+                <Eye
+                  onClick={() => setShowPassword(false)}
+                  className="text-text2 absolute top-1/2 right-5 -translate-y-1/2 cursor-pointer"
+                />
+              ) : (
+                <EyeOff
+                  onClick={() => setShowPassword(true)}
+                  className="text-text2 absolute top-1/2 right-5 -translate-y-1/2 cursor-pointer"
+                />
+              )}
+            </div>
+
+            {form.formState.errors.password && (
+              <p className="text-sm text-red-500">
+                {form.formState.errors.password.message}
+              </p>
             )}
           </div>
 
           <Link
             href=""
-            className="text-text2 hover:text-text flex w-full justify-center gap-2 py-1 text-base"
+            className="text-text2 hover:text-text flex w-full justify-center text-base"
           >
             Esqueci a senha
           </Link>
@@ -105,7 +139,7 @@ export default function Login() {
           </Button>
         </form>
 
-        <Button variant="transparent" asChild>
+        <Button variant="transparent" asChild className="border-primary">
           <Link href="/signup">Cadastrar</Link>
         </Button>
       </section>

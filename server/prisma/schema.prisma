@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../../generated/prisma"
@@ -14,208 +8,176 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid()) @map("id_user")
-  name          String
-  firstName     String?   @map("first_name")
-  lastName      String?   @map("last_name")
-  email         String
-  emailVerified Boolean   @default(false) @map("email_verified")
-  image         String?   @map("photo_url") // Mapeado para BetterAuth
-  cpf           String?
-  dateOfBirth   DateTime? @map("date_of_birth")
-  phone         String?
-  secondPhone   String?   @map("second_phone")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-
-  sessions Session[]
-  accounts Account[]
-
-  clinicMembers ClinicMember[]
-  professionals Professional[]
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @map("id_user") @db.Uuid
+  firstName     String?        @map("first_name") @db.VarChar(255)
+  lastName      String?        @map("last_name") @db.VarChar(255)
+  image         String?        @map("photo_url")
+  phone         String?        @db.VarChar(50)
+  secondPhone   String?        @map("second_phone") @db.VarChar(50)
+  email         String         @unique @db.VarChar(255)
+  createdAt     DateTime?      @default(now()) @map("created_at") @db.Timestamptz(6)
+  name          String?        @db.VarChar
+  emailVerified Boolean        @default(false) @map("email_verified")
+  updatedAt     DateTime?      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  cpf           String?        @db.VarChar(20)
+  dateOfBirth   DateTime?      @map("date_of_birth") @db.Date
+  
   auditLogs     AuditLog[]
+  accounts      Account[]
+  clinicMembers ClinicMember[]
+  sessions      Session[]
 
-  @@unique([email])
   @@map("usr_users")
 }
 
 model Session {
-  id        String   @id @default(uuid())
-  expiresAt DateTime @map("expires_at")
-  token     String
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  ipAddress String?  @map("ip_address")
-  userAgent String?  @map("user_agent")
-  userId    String   @map("user_id")
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id") @db.Uuid
+  token     String    @unique
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(6)
+  ipAddress String?   @map("ip_address")
+  userAgent String?   @map("user_agent")
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@unique([token])
-  @@index([userId])
   @@map("usr_sessions")
 }
 
 model Account {
   id                    String    @id @default(uuid())
+  userId                String    @map("user_id") @db.Uuid
   accountId             String    @map("account_id")
   providerId            String    @map("provider_id")
-  userId                String    @map("user_id")
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?   @map("access_token")
   refreshToken          String?   @map("refresh_token")
-  idToken               String?   @map("id_token")
-  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
-  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at") @db.Timestamptz(6)
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.Timestamptz(6)
   scope                 String?
   password              String?
-  createdAt             DateTime  @default(now()) @map("created_at")
-  updatedAt             DateTime  @updatedAt @map("updated_at")
+  createdAt             DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  idToken               String?   @map("id_token")
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([userId])
   @@map("usr_accounts")
 }
 
 model Verification {
-  id         String   @id @default(uuid())
+  id         String    @id @default(uuid())
   identifier String
   value      String
-  expiresAt  DateTime @map("expires_at")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(6)
+  createdAt  DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  @@index([identifier])
   @@map("usr_verifications")
 }
 
-// ==========================================
-// MÓDULO DE ORGANIZAÇÃO
-// ==========================================
-
 model Clinic {
-  id        String   @id @default(uuid()) @map("id_clinic")
-  name      String
-  createdAt DateTime @default(now()) @map("created_at")
-
-  members       ClinicMember[]
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @map("id_clinic") @db.Uuid
+  name          String         @db.VarChar(255)
+  createdAt     DateTime?      @default(now()) @map("created_at") @db.Timestamptz(6)
   professionals Professional[]
   patients      Patient[]
   appointments  Appointment[]
+  members       ClinicMember[]
 
   @@map("org_clinics")
 }
 
-// ==========================================
-// MÓDULO DE CARGOS E STAFF
-// ==========================================
-
 model Role {
-  id          String   @id @default(uuid()) @map("id_role")
-  description String   @unique
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  members ClinicMember[]
+  id          String         @id @default(dbgenerated("gen_random_uuid()")) @map("id_role") @db.Uuid
+  description String         @unique @db.VarChar(50)
+  createdAt   DateTime?      @default(now()) @map("created_at") @db.Timestamptz(6)
+  members     ClinicMember[]
 
   @@map("usr_roles")
 }
 
 model ClinicMember {
-  id        String   @id @default(uuid()) @map("id_member")
-  userId    String   @map("user_id")
-  clinicId  String   @map("clinic_id")
-  roleId    String   @map("role_id")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
-  role   Role   @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @map("id_member") @db.Uuid
+  userId    String?   @map("user_id") @db.Uuid
+  clinicId  String?   @map("clinic_id") @db.Uuid
+  roleId    String?   @map("role_id") @db.Uuid
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  clinic    Clinic?   @relation(fields: [clinicId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  role      Role?     @relation(fields: [roleId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("usr_clinic_members")
 }
 
-// ==========================================
-// MÓDULO MÉDICO
-// ==========================================
-
 model Professional {
-  id        String   @id @default(uuid()) @map("id_professional")
-  userId    String   @map("user_id")
-  clinicId  String   @map("clinic_id")
-  specialty String?  @map("speciality")
-  services  String[] // Array nativo do PostgreSQL
-  createdAt DateTime @default(now()) @map("created_at")
-
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  clinic       Clinic        @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @map("id_professional") @db.Uuid
+  userId       String?       @map("user_id") @db.Uuid
+  clinicId     String?       @map("clinic_id") @db.Uuid
+  specialty    String?       @map("speciality") @db.VarChar(255)
+  services     String[]
+  createdAt    DateTime?     @default(now()) @map("created_at") @db.Timestamptz(6)
+  
+  clinic       Clinic?       @relation(fields: [clinicId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   appointments Appointment[]
 
   @@map("med_professionals")
 }
 
-// ==========================================
-// MÓDULO DE PACIENTES
-// ==========================================
-
 model Patient {
-  id            String    @id @default(uuid()) @map("id_patient")
-  clinicId      String    @map("clinic_id")
-  firstName     String    @map("first_name")
-  lastName      String    @map("last_name")
-  cpf           String?
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @map("id_patient") @db.Uuid
+  clinicId      String?   @map("clinic_id") @db.Uuid
+  firstName     String    @map("first_name") @db.VarChar(255)
+  lastName      String    @map("last_name") @db.VarChar(255)
+  cpf           String?   @db.VarChar(20)
   dateOfBirth   DateTime? @map("date_of_birth") @db.Date
-  gender        String?
-  phone         String?
-  secondPhone   String?   @map("second_phone")
-  email         String?
-  zipCode       String?   @map("zip_code")
-  street        String?
-  addressNumber String?   @map("address_number")
-  complement    String?
-  neighborhood  String?
-  city          String?
-  state         String?
+  gender        String?   @db.VarChar(20)
+  phone         String?   @db.VarChar(50)
+  secondPhone   String?   @map("second_phone") @db.VarChar(50)
+  email         String?   @db.VarChar(255)
+  zipCode       String?   @map("zip_code") @db.VarChar(20)
+  street        String?   @db.VarChar(255)
+  addressNumber String?   @map("address_number") @db.VarChar(20)
+  complement    String?   @db.VarChar(100)
+  neighborhood  String?   @db.VarChar(100)
+  city          String?   @db.VarChar(100)
+  state         String?   @db.VarChar(2)
   notes         String?   @db.Text
-  createdAt     DateTime  @default(now()) @map("created_at")
+  createdAt     DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  clinic        Clinic        @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  clinic        Clinic?       @relation(fields: [clinicId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   appointments  Appointment[]
 
   @@map("pat_patients")
 }
 
-// ==========================================
-// MÓDULO DE AGENDAMENTOS
-// ==========================================
 model Appointment {
-  id             String   @id @default(uuid()) @map("id_appointment")
-  clinicId       String   @map("clinic_id")
-  professionalId String   @map("professional_id")
-  patientId      String   @map("patient_id")
-  date           DateTime @map("appointment_date") @db.Date // Força ser só Data no banco
-  time           DateTime @map("appointment_time") @db.Time // Força ser só Hora no banco
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @map("id_appointment") @db.Uuid
+  clinicId       String?       @map("clinic_id") @db.Uuid
+  professionalId String?       @map("professional_id") @db.Uuid
+  patientId      String?       @map("patient_id") @db.Uuid
+  date           DateTime      @map("appointment_date") @db.Date
+  time           DateTime      @map("appointment_time") @db.Time(6)
   services       String[]
-  createdAt      DateTime @default(now()) @map("created_at")
-
-  clinic       Clinic       @relation(fields: [clinicId], references: [id], onDelete: Cascade)
-  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
-  patient      Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  createdAt      DateTime?     @default(now()) @map("created_at") @db.Timestamptz(6)
+  value          Int?
+  
+  clinic         Clinic?       @relation(fields: [clinicId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  patient        Patient?      @relation(fields: [patientId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  professional   Professional? @relation(fields: [professionalId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("sch_appointments")
 }
 
-// ==========================================
-// MÓDULO DE AUDITORIA
-// ==========================================
 model AuditLog {
-  id        String   @id @default(uuid()) @map("id_log")
-  tableName String   @map("table_name")
-  recordId  String   @map("record_id")
-  action    String
-  oldData   Json?    @map("old_data")
-  newData   Json?    @map("new_data")
-  changedBy String?  @map("changed_by")
-  changedAt DateTime @default(now()) @map("changed_at")
-
-  user User? @relation(fields: [changedBy], references: [id], onDelete: SetNull)
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @map("id_log") @db.Uuid
+  tableName String    @map("table_name") @db.VarChar(50)
+  recordId  String    @map("record_id") @db.Uuid
+  action    String    @db.VarChar(20)
+  oldData   Json?     @map("old_data")
+  newData   Json?     @map("new_data")
+  changedBy String?   @map("changed_by") @db.Uuid
+  changedAt DateTime? @default(now()) @map("changed_at") @db.Timestamptz(6)
+  user      User?     @relation(fields: [changedBy], references: [id], onUpdate: NoAction)
 
   @@map("aud_logs")
 }
+

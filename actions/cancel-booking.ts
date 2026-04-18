@@ -29,13 +29,6 @@ export const cancelAppointment = protectedActionClient
       });
     }
 
-    // alterar para user admin ou outra role deletar um agendamento
-    if (appointment.patient.userId !== user.id) {
-      returnValidationErrors(inputSchema, {
-        _errors: ["Você não tem permissão para cancelar este agendamento."],
-      });
-    }
-
     const dateTime = new Date(appointment.date);
     dateTime.setHours(
       appointment.time.getHours(),

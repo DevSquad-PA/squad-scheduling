@@ -1,14 +1,13 @@
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import SideBarAdmin from "./SideBarAdmin"
+import SideBarAdmin from "./components/SideBarAdmin"
 export default async function Layout({ children }: any) {
 
   const session = await auth.api.getSession({
     headers: await headers()
   })
 
-  console.log("SESSION:", session)
   if (!session) {
     redirect("/login")
   }

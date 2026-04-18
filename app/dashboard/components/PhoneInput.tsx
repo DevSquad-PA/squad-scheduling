@@ -4,13 +4,12 @@ import { cn } from "@/lib/utils";
 interface PhoneInputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 const formatPhone = (value: string) => {
-  // Remove all non-digit characters
   let digits = value.replace(/\D/g, "");
-  // Remove leading 55 if present
+
   if (digits.startsWith("55") && digits.length > 11) {
     digits = digits.slice(2);
   }
-  // Format: (XX) XXXXX-XXXX
+
   if (digits.length > 2) {
     digits = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
   }
