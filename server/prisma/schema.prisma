@@ -21,8 +21,8 @@ model User {
   updatedAt     DateTime?      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   cpf           String?        @db.VarChar(20)
   dateOfBirth   DateTime?      @map("date_of_birth") @db.Date
+  
   auditLogs     AuditLog[]
-  professionals Professional[]
   accounts      Account[]
   clinicMembers ClinicMember[]
   sessions      Session[]
@@ -115,19 +115,36 @@ model Professional {
   specialty    String?       @map("speciality") @db.VarChar(255)
   services     String[]
   createdAt    DateTime?     @default(now()) @map("created_at") @db.Timestamptz(6)
+  
   clinic       Clinic?       @relation(fields: [clinicId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  user         User?         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   appointments Appointment[]
 
   @@map("med_professionals")
 }
 
 model Patient {
-  id           String        @id @default(dbgenerated("gen_random_uuid()")) @map("id_patient") @db.Uuid
-  clinicId     String?       @map("clinic_id") @db.Uuid
-  createdAt    DateTime?     @default(now()) @map("created_at") @db.Timestamptz(6)
-  clinic       Clinic?       @relation(fields: [clinicId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  appointments Appointment[]
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @map("id_patient") @db.Uuid
+  clinicId      String?   @map("clinic_id") @db.Uuid
+  firstName     String    @map("first_name") @db.VarChar(255)
+  lastName      String    @map("last_name") @db.VarChar(255)
+  cpf           String?   @db.VarChar(20)
+  dateOfBirth   DateTime? @map("date_of_birth") @db.Date
+  gender        String?   @db.VarChar(20)
+  phone         String?   @db.VarChar(50)
+  secondPhone   String?   @map("second_phone") @db.VarChar(50)
+  email         String?   @db.VarChar(255)
+  zipCode       String?   @map("zip_code") @db.VarChar(20)
+  street        String?   @db.VarChar(255)
+  addressNumber String?   @map("address_number") @db.VarChar(20)
+  complement    String?   @db.VarChar(100)
+  neighborhood  String?   @db.VarChar(100)
+  city          String?   @db.VarChar(100)
+  state         String?   @db.VarChar(2)
+  notes         String?   @db.Text
+  createdAt     DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  clinic        Clinic?       @relation(fields: [clinicId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  appointments  Appointment[]
 
   @@map("pat_patients")
 }
@@ -142,6 +159,7 @@ model Appointment {
   services       String[]
   createdAt      DateTime?     @default(now()) @map("created_at") @db.Timestamptz(6)
   value          Int?
+  
   clinic         Clinic?       @relation(fields: [clinicId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   patient        Patient?      @relation(fields: [patientId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   professional   Professional? @relation(fields: [professionalId], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -162,3 +180,4 @@ model AuditLog {
 
   @@map("aud_logs")
 }
+
