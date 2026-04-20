@@ -60,7 +60,7 @@ function formatTelefone(value: string) {
 // =======================
 // COMPONENTE
 // =======================
-export function AgendamentoDialog() {
+export default function AgendamentoDialog() {
   const [servico, setServico] = useState("")
   const [especialista, setEspecialista] = useState("")
 

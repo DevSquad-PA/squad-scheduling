@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Search, ChevronLeft, ChevronRight, UserPen } from "lucide-react";
-import { AgendamentoDialog } from "./components/AgendamentoPopup";
+import { Search, ChevronLeft, ChevronRight} from "lucide-react";
+import AgendamentoDialog from "./components/AgendamentoDialog";
 
-type Agendamento = {
+type propsappointment = {
   nome: string;
   data: string;
   hora: string;
@@ -15,15 +15,11 @@ type Agendamento = {
 export default function DashboardClient({
   initial,
 }: {
-  initial: Agendamento[];
+  initial: propsappointment[];
 }) {
   const [search, setSearch] = useState("");
   const [dataAtual, setDataAtual] = useState(new Date());
-  const [exemplo, setExemplo] = useState<Agendamento[]>(initial || []);
-
-  useEffect(() => {
-    setExemplo(initial || []);
-  }, [initial]);
+  const appointments = initial || [];
 
   function formatarData(date: Date) {
     return date.toLocaleDateString("pt-BR", {
@@ -58,16 +54,30 @@ export default function DashboardClient({
     });
   }
 
-  const filtrados = exemplo.filter((e) => {
-    const matchData =
-      formatarData(parseData(e.data)) === formatarData(dataAtual);
+  function mesmaData(d1: Date | string, d2: Date) {
+    return (
+      new Date(d1).toLocaleDateString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+      }) ===
+      new Date(d2).toLocaleDateString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+      })
+    )
+  }
+
+
+
+
+  const filtrados = appointments.filter((a: propsappointment) => {
+    const matchData = mesmaData(a.data, dataAtual)
 
     const matchSearch =
-      e.nome.toLowerCase().includes(search.toLowerCase()) ||
-      e.descricao.toLowerCase().includes(search.toLowerCase());
+      a.nome.toLowerCase().includes(search.toLowerCase()) ||
+      a.descricao.toLowerCase().includes(search.toLowerCase());
 
-    return matchData && matchSearch;
-  });
+    return matchData && matchSearch
+  })
+
 
   return (
     <div className="flex flex-col gap-4 p-8">
@@ -106,29 +116,36 @@ export default function DashboardClient({
         </button>
       </div>
 
-      {filtrados.length === 0 && (
-        <p className="text-sm text-gray-500">Nenhum agendamento</p>
-      )}
+      
+
+       {filtrados.length>0 &&
+       <div className="grid grid-cols-[2fr_2fr_2fr_1fr] gap-x-6 py-2 font-bold">
+          <p>Nome</p>
+          <p>Serviço</p>
+          <p>Profissional</p>
+          <p>Hora</p>
+        </div>
+        }
 
       {filtrados.map((e, i) => (
         <div
           key={i}
-          className="grid w-full grid-cols-[2fr_3fr_1.5fr_auto] items-center gap-x-6 gap-y-1 py-2"
+          className="grid w-full grid-cols-[2fr_2fr_2fr_1fr] items-center gap-x-6 gap-y-1 py-2 hover:text-primary cursor-pointer"
         >
-          <p className="truncate">{e.nome}</p>
+          <p>Nome do Cliente</p>
           <p className="truncate">{e.descricao}</p>
-          <p className="whitespace-nowrap">
-            {e.data}
-            {e.hora ? ` às ${e.hora}` : ""}
-          </p>
-
-          <button className="cursor-pointer">
-            <UserPen className="hover:text-primary" />
-          </button>
+          <p className="truncate">{e.nome}</p>
+          <p className="whitespace-nowrap">{e.hora}</p>
 
           <span className="bg-text2 col-span-full h-px"></span>
         </div>
       ))}
+
+      {filtrados.length === 0 && (
+        <p className="text-sm text-gray-500">Nenhum agendamento</p>
+      )}
+
     </div>
+
   );
 }

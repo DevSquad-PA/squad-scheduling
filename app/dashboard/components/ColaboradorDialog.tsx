@@ -43,7 +43,7 @@ function formatTelefone(value: string) {
 }
 
 
-export function ColaboradorDialog() {
+export default function ColaboradorDialog() {
   const [tipo, setTipo] = useState("")
 
   const form = useForm<FormSchema>({
