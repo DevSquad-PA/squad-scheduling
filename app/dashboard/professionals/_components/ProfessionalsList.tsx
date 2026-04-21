@@ -14,6 +14,15 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { PhoneInput } from "@/app/dashboard/components/PhoneInput";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 type Professional = {
   id: string;
@@ -35,9 +44,13 @@ export default function ProfessionalsList({
 }: {
   initial: Professional[];
 }) {
+  const ITEMS_PER_PAGE = 16;
+  const COLUMNS = 4;
+
   const [professionals, setProfessionals] = useState<Professional[]>(initial);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   async function createProfessional(payload: any) {
     try {
@@ -65,6 +78,11 @@ export default function ProfessionalsList({
       p.services.join(", ").toLowerCase().includes(q)
     );
   });
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedProfessionals = filtered.slice(startIndex, endIndex);
 
   const ProfessionalsForm = ({
     onSubmit,
@@ -148,41 +166,46 @@ export default function ProfessionalsList({
     <div className="flex flex-col gap-4 p-4 md:p-8">
       <h2 className="mb-2 text-base font-bold">Profissionais</h2>
 
-      <div className="flex items-center gap-4">
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button variant="themegreen">Cadastrar profissional</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Cadastro de profissional</DialogTitle>
-            </DialogHeader>
-            <ProfessionalsForm
-              onSubmit={createProfessional}
-              onCancel={() => setOpen(false)}
-            />
-            <DialogFooter />
-          </DialogContent>
-        </Dialog>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="w-fit">
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button variant="themegreen">Cadastrar profissional</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Cadastro de profissional</DialogTitle>
+              </DialogHeader>
+              <ProfessionalsForm
+                onSubmit={createProfessional}
+                onCancel={() => setOpen(false)}
+              />
+              <DialogFooter />
+            </DialogContent>
+          </Dialog>
+        </div>
 
         <div className="relative w-full max-w-xs md:w-fit">
           <Input
             placeholder="Pesquisar"
             className="w-full pr-10"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
           />
           <Search className="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.length === 0 && (
+      <div className={`grid gap-4 ${COLUMNS === 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+        {paginatedProfessionals.length === 0 && (
           <p className="col-span-full text-sm text-gray-500">
             Nenhum profissional encontrado.
           </p>
         )}
-        {filtered.map((p) => (
+        {paginatedProfessionals.map((p) => (
           <Card key={p.id}>
             <CardHeader>
               <CardTitle>{p.user?.name ?? "—"}</CardTitle>
@@ -196,6 +219,39 @@ export default function ProfessionalsList({
           </Card>
         ))}
       </div>
+
+      {totalPages > 1 && (
+        <div className="mt-6 flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  disabled={currentPage === 1}
+                />
+              </PaginationItem>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <PaginationItem key={page}>
+                  <PaginationLink
+                    isActive={page === currentPage}
+                    onClick={() => setCurrentPage(page)}
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </div>
   );
 }
