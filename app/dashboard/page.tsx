@@ -25,7 +25,7 @@ function formatHora(v: unknown): string {
         hour12: false,
       });
     }
-  } catch {}
+  } catch { }
   return "";
 }
 
@@ -53,10 +53,15 @@ export default async function DashboardPage() {
     const appointments = await getAppointmentsByClinic(clinicMember.clinicId);
 
     const mapped = appointments.map((a) => ({
-      nome: a.professional?.user?.name ?? "---",
+      nome: a.professional?.clinicId ?? "Sem profissional",
       data: new Date(a.date).toLocaleDateString("pt-BR"),
       hora: formatHora(a.time),
       descricao: Array.isArray(a.services) ? a.services.join(", ") : "",
+      cliente: a.patient?.firstName ?? "Sem nome",
+      endereco: a.patient?.addressNumber ?? "Sem endereço",
+      contato: a.patient?.phone ?? "Sem contato",
+      cpf: a.patient?.cpf ?? "Sem CPF",
+      email: a.patient?.email ?? "Sem email",
     }));
 
     return <DashboardClient initial={mapped} />;

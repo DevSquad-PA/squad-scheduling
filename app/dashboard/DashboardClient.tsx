@@ -2,14 +2,20 @@
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Search, ChevronLeft, ChevronRight} from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import AgendamentoDialog from "./components/AgendamentoDialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type propsappointment = {
   nome: string;
   data: string;
   hora: string;
   descricao: string;
+  cliente: string;
+  endereco: string;
+  contato: string;
+  cpf: string;
+  email: string;
 };
 
 export default function DashboardClient({
@@ -69,7 +75,8 @@ export default function DashboardClient({
 
 
   const filtrados = appointments.filter((a: propsappointment) => {
-    const matchData = mesmaData(a.data, dataAtual)
+    
+    const matchData = mesmaData(parseData(a.data), dataAtual)
 
     const matchSearch =
       a.nome.toLowerCase().includes(search.toLowerCase()) ||
@@ -116,30 +123,51 @@ export default function DashboardClient({
         </button>
       </div>
 
-      
 
-       {filtrados.length>0 &&
-       <div className="grid grid-cols-[2fr_2fr_2fr_1fr] gap-x-6 py-2 font-bold">
-          <p>Nome</p>
-          <p>Serviço</p>
+
+      {/* {filtrados.length > 0 &&
+        <div className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-x-6 py-2 font-bold">
           <p>Profissional</p>
+          <p>Serviço</p>
           <p>Hora</p>
+          <p>Cliente</p>
         </div>
-        }
+      } */}
 
-      {filtrados.map((e, i) => (
-        <div
-          key={i}
-          className="grid w-full grid-cols-[2fr_2fr_2fr_1fr] items-center gap-x-6 gap-y-1 py-2 hover:text-primary cursor-pointer"
-        >
-          <p>Nome do Cliente</p>
-          <p className="truncate">{e.descricao}</p>
-          <p className="truncate">{e.nome}</p>
-          <p className="whitespace-nowrap">{e.hora}</p>
 
-          <span className="bg-text2 col-span-full h-px"></span>
-        </div>
-      ))}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+
+        {filtrados.map((e, i) => (
+
+          <Card key={i}>
+            <CardHeader>
+              <CardTitle>{e.nome ?? "—"}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-1 text-sm">
+              <p><strong>Serviço:</strong> {e.descricao ?? "—"}</p>
+              <p><strong>Hora:</strong> {e.hora ?? "N/A"}</p>
+              <p><strong>Cliente:</strong> {e.cliente ?? "N/A"}</p>
+              <p><strong>Contato:</strong> {e.contato ?? "N/A"}</p>
+              <p><strong>CPF:</strong> {e.cpf ?? "N/A"}</p>
+              <p><strong>Endereço:</strong> {e.endereco ?? "N/A"}</p>
+            </CardContent>
+          </Card>
+
+
+
+          // <div
+          //   key={i}
+          //   className="grid w-full grid-cols-[2fr_2fr_1fr_1fr] items-center gap-x-6 gap-y-1 py-2 hover:text-primary cursor-pointer"
+          // >
+          //   <p className="truncate">{e.nome}</p>
+          //   <p className="truncate">{e.descricao}</p>
+          //   <p className="whitespace-nowrap">{e.hora}</p>
+          //   <p>{e.cliente}</p>
+          //   <span className="bg-text2 col-span-full h-px"></span>
+          // </div>
+        ))}
+
+      </div>
 
       {filtrados.length === 0 && (
         <p className="text-sm text-gray-500">Nenhum agendamento</p>
