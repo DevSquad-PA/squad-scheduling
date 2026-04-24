@@ -2,9 +2,9 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, UserPen } from "lucide-react";
-import { AgendamentoDialog } from "../components/AgendamentoPopup";
+import AgendamentoDialog from "../components/AgendamentoDialog";
 import { useState } from "react";
-import { ColaboradorDialog } from "../components/ColaboradorPopup";
+import ColaboradorDialog from "../components/ColaboradorDialog";
 
 export default function Settings () {
 
