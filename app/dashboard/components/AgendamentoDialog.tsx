@@ -27,6 +27,7 @@ import {
   SelectItem,
 } from "@/components/ui/select"
 import { getAvailableTime } from "@/actions/get-date-available-time"
+import { getPatientsWithBookings } from "@/actions/get-patients-with-bookings"
 
 
 
@@ -73,6 +74,8 @@ function formatTelefone(value: string) {
 
 export default function AgendamentoDialog() {
   const [categoria, setCategoria] = useState("")
+  const [isNewClient, setIsNewClient] = useState(true)
+  const [selectedPatientId, setSelectedPatientId] = useState<string | undefined>(undefined)
   const [availableTimes, setAvailableTimes] = useState<string[]>([])
   const [especialistaId, setEspecialistaId] = useState("")
   const mutation = useMutation({
@@ -163,18 +166,29 @@ export default function AgendamentoDialog() {
       return
     }
 
-    const mapped = {
-      // name: data.nome,
-      // cpf: data.cpf,
-      // phone: data.contato,
-      // address: data.endereco,
+    const mapped: any = {
       clinicId: selectedProfessional?.clinicId,
       professionalId: selectedProfessional?.id,
-      patientId: "008500b9-912b-44fd-bafa-e270acd7f432",
       date: date,
       time: time,
       services: [data.servico],
     }
+
+    if (!isNewClient) {
+      if (!selectedPatientId) {
+        console.log("Selecione um cliente existente")
+        return
+      }
+      mapped.patientId = selectedPatientId
+    } else {
+      mapped.patient = {
+        name: data.nome,
+        cpf: data.cpf,
+        phone: data.contato,
+        address: data.endereco,
+      }
+    }
+
     console.log("agendadov:", mapped)
     mutation.mutate(mapped)
   }
@@ -184,6 +198,11 @@ export default function AgendamentoDialog() {
   const { data: professionals = [], isLoading } = useQuery({
     queryKey: ["professionals", clinicId],
     queryFn: () => getProfessionalsByClinic(clinicId),
+  })
+
+  const { data: patients = [] } = useQuery({
+    queryKey: ["patientsWithBookings", clinicId],
+    queryFn: () => getPatientsWithBookings({ clinicId }),
   })
 
 
@@ -217,56 +236,103 @@ export default function AgendamentoDialog() {
           className="flex flex-col gap-2"
         >
 
-          <Input placeholder="Nome Completo" {...form.register("nome")} />
-          {error.nome && (
-            <span className="text-alert text-xs">{error.nome.message}</span>
-          )}
+          <div className="flex gap-4 items-center">
+            <label className="flex items-center gap-2">
+              <input type="radio" name="clientType" checked={isNewClient} onChange={() => { setIsNewClient(true); setSelectedPatientId(undefined); form.setValue("nome", ""); form.setValue("cpf", ""); form.setValue("endereco", ""); form.setValue("contato", "") }} />
+              <span>Novo cliente</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input type="radio" name="clientType" checked={!isNewClient} onChange={() => { setIsNewClient(false); }} />
+              <span>Cliente existente</span>
+            </label>
+          </div>
 
+          {isNewClient ? (
+            <>
+              <Input placeholder="Nome Completo" {...form.register("nome")} />
+              {error.nome && (
+                <span className="text-alert text-xs">{error.nome.message}</span>
+              )}
 
-          <Controller
-            control={form.control}
-            name="cpf"
-            render={({ field }) => (
-              <Input
-                placeholder="CPF"
-                value={formatCPF(field.value || "")}
-                onChange={(e) => {
-                  const raw = unmask(e.target.value).slice(0, 11)
-                  field.onChange(raw)
-                }}
+              <Controller
+                control={form.control}
+                name="cpf"
+                render={({ field }) => (
+                  <Input
+                    placeholder="CPF"
+                    value={formatCPF(field.value || "")}
+                    onChange={(e) => {
+                      const raw = unmask(e.target.value).slice(0, 11)
+                      field.onChange(raw)
+                    }}
+                  />
+                )}
               />
-            )}
-          />
-          {error.cpf && (
-            <span className="text-alert text-xs">{error.cpf.message}</span>
-          )}
+              {error.cpf && (
+                <span className="text-alert text-xs">{error.cpf.message}</span>
+              )}
 
-          <Input placeholder="Endereço" {...form.register("endereco")} />
-          {error.endereco && (
-            <span className="text-alert text-xs">
-              {error.endereco.message}
-            </span>
-          )}
+              <Input placeholder="Endereço" {...form.register("endereco")} />
+              {error.endereco && (
+                <span className="text-alert text-xs">
+                  {error.endereco.message}
+                </span>
+              )}
 
-          <Controller
-            control={form.control}
-            name="contato"
-            render={({ field }) => (
-              <Input
-                placeholder="Contato"
-                value={formatTelefone(field.value || "")}
-                onChange={(e) => {
-                  const raw = unmask(e.target.value).slice(0, 11)
-                  field.onChange(raw)
-                }}
+              <Controller
+                control={form.control}
+                name="contato"
+                render={({ field }) => (
+                  <Input
+                    placeholder="Contato"
+                    value={formatTelefone(field.value || "")}
+                    onChange={(e) => {
+                      const raw = unmask(e.target.value).slice(0, 11)
+                      field.onChange(raw)
+                    }}
+                  />
+                )}
               />
-            )}
-          />
-          {error.contato && (
-            <span className="text-alert text-xs">
-              {error.contato.message}
-            </span>
+              {error.contato && (
+                <span className="text-alert text-xs">
+                  {error.contato.message}
+                </span>
+              )}
+            </>
+          ) : (
+            <>
+              <Select
+                value={selectedPatientId}
+                onValueChange={(v) => {
+                  setSelectedPatientId(v)
+                  const p = patients.find((p: any) => p.id === v)
+                  form.setValue("nome", p?.firstName ?? "")
+                  form.setValue("cpf", p?.cpf ?? "")
+                  form.setValue("endereco", p?.addressNumber ?? "")
+                  form.setValue("contato", p?.phone ?? "")
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecionar cliente" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {patients.length === 0 ? (
+                    <SelectItem value="empty" disabled>Nenhum cliente com agendamento</SelectItem>
+                  ) : (
+                    patients.map((p: any) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.firstName} {p.lastName ?? ""} - {p.phone ?? p.cpf}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </>
           )}
+
+
+          
 
           <Select
             value={categoria}
