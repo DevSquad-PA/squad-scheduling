@@ -13,6 +13,7 @@ function formatHora(v: unknown): string {
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
+        timeZone: "UTC",
       });
     }
     const s = String(v);
@@ -23,6 +24,7 @@ function formatHora(v: unknown): string {
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
+        timeZone: "UTC",
       });
     }
   } catch { }
@@ -54,7 +56,7 @@ export default async function DashboardPage() {
 
     const mapped = appointments.map((a) => ({
       nome: a.professional?.clinicId ?? "Sem profissional",
-      data: new Date(a.date).toLocaleDateString("pt-BR"),
+      data: new Date(a.date).toLocaleDateString("pt-BR", { timeZone: "UTC" }),
       hora: formatHora(a.time),
       descricao: Array.isArray(a.services) ? a.services.join(", ") : "",
       cliente: a.patient?.firstName ?? "Sem nome",

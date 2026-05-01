@@ -19,8 +19,8 @@ const inputSchema = z
     professionalId: z.string().uuid(),
     patientId: z.string().uuid().optional(),
     patient: newPatientSchema.optional(),
-    date: z.date(),
-    time: z.date(),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // YYYY-MM-DD
+    time: z.string().regex(/^\d{2}:\d{2}$/), // HH:mm
     services: z.array(z.string()).min(1),
   })
   .superRefine((data, ctx) => {
@@ -35,15 +35,17 @@ const inputSchema = z
 export const createAppointment = protectedActionClient
   .inputSchema(inputSchema)
   .action(async ({ parsedInput: { clinicId, professionalId, patientId, patient, date, time, services } }) => {
-    const appointmentDateTime = new Date(date);
-    appointmentDateTime.setHours(
-      time.getHours(),
-      time.getMinutes(),
-      0,
-      0
-    );
+    // parsedInput.date is "YYYY-MM-DD", parsedInput.time is "HH:mm"
+    const [year, month, day] = date.split("-").map(Number)
+    const [hours, minutes] = time.split(":").map(Number)
 
-    if (isPast(appointmentDateTime)) {
+    // Construct UTC moments so the stored calendar day is exactly the chosen one.
+    const appointmentDateTimeUTC = new Date(Date.UTC(year, month - 1, day, hours, minutes, 0, 0))
+
+    const dateOnly = new Date(Date.UTC(year, month - 1, day))
+    const timeOnly = new Date(Date.UTC(1970, 0, 1, hours, minutes, 0, 0))
+
+    if (isPast(appointmentDateTimeUTC)) {
       returnValidationErrors(inputSchema, {
         _errors: ["Data e hora já passaram."],
       });
@@ -95,8 +97,8 @@ export const createAppointment = protectedActionClient
     const existingAppointment = await prisma.appointment.findFirst({
       where: {
         professionalId,
-        date,
-        time,
+        date: dateOnly,
+        time: timeOnly,
       },
     });
 
@@ -111,12 +113,13 @@ export const createAppointment = protectedActionClient
         clinicId,
         professionalId,
         patientId: resolvedPatientId,
-        date,
-        time,
+        date: dateOnly,
+        time: timeOnly,
         services,
       },
     });
 
+    console.log("[create-booking] created appointment:", appointment)
     return appointment;
     }
   );

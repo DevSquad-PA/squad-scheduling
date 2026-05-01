@@ -2,15 +2,17 @@
 
 import { createAppointment } from "@/actions/create-booking"
 
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useQuery } from "@tanstack/react-query"
 import { getProfessionalsByClinic } from "@/data/professional"
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import z from "zod"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { useToast } from "@/components/ui/toast"
 import {
   Dialog,
   DialogTrigger,
@@ -78,32 +80,6 @@ export default function AgendamentoDialog() {
   const [selectedPatientId, setSelectedPatientId] = useState<string | undefined>(undefined)
   const [availableTimes, setAvailableTimes] = useState<string[]>([])
   const [especialistaId, setEspecialistaId] = useState("")
-  const mutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await createAppointment(data)
-
-      // next-safe-action retorna isso
-      if (res?.validationErrors) {
-        throw new Error(res.validationErrors._errors?.[0] || "Erro")
-      }
-
-      return res
-    },
-
-    onSuccess: () => {
-      console.log("Agendamento criado")
-
-      form.reset()
-      setCategoria("")
-      setEspecialistaId("")
-
-    },
-
-    onError: (err: any) => {
-      console.log("Erro:", err.message)
-    },
-  })
-
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -116,6 +92,37 @@ export default function AgendamentoDialog() {
       especialista: "",
       date: "",
       hora: "",
+    },
+  })
+
+  const queryClient = useQueryClient()
+  const toast = useToast()
+  const router = useRouter()
+
+  const mutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await createAppointment(data)
+
+      // next-safe-action retorna isso
+      if (res?.validationErrors) {
+        throw new Error(res.validationErrors._errors?.[0] || "Erro")
+      }
+
+      return res
+    },
+    onSuccess: (created) => {
+      console.log("Agendamento criado (response):", created)
+      toast.success("Agendamento criado")
+      form.reset()
+      setCategoria("")
+      setEspecialistaId("")
+      router.refresh()
+    },
+
+    onError: (err: any) => {
+      console.error("Erro ao criar agendamento:", err)
+      const msg = err?.message || "Erro ao criar agendamento"
+      toast.error("Erro", msg)
     },
   })
 
@@ -153,8 +160,9 @@ export default function AgendamentoDialog() {
 
     const [year, month, day] = data.date.split("-").map(Number)
     const [hours, minutes] = data.hora.split(":").map(Number)
-    const date = new Date(year, month - 1, day)
-    const time = new Date(1970, 0, 1, hours, minutes)
+    // send date and time as strings to server for consistent parsing
+    const date = data.date // "YYYY-MM-DD"
+    const time = data.hora // "HH:mm"
 
     const selectedProfessional = professionals?.find(
       (p) => p.id === especialistaId
@@ -202,7 +210,10 @@ export default function AgendamentoDialog() {
 
   const { data: patients = [] } = useQuery({
     queryKey: ["patientsWithBookings", clinicId],
-    queryFn: () => getPatientsWithBookings({ clinicId }),
+    queryFn: async () => {
+      const res = await getPatientsWithBookings({ clinicId })
+      return res?.data ?? []
+    },
   })
 
 
