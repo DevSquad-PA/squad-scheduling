@@ -53,18 +53,34 @@ type Props = {
 
 export default function SideBarAdmin({ children, user }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [image, setImage] = useState<string | null>(null);
+  const [image, setImage] = useState<string | null>(user?.image || null);
 
   function handleClick() {
     inputRef.current?.click();
   }
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Mostra preview imediato
     const url = URL.createObjectURL(file);
     setImage(url);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const { uploadAvatar } = await import("@/app/actions/upload-avatar");
+      const result = await uploadAvatar(formData);
+
+      if (result.success) {
+        setImage(result.url);
+      }
+    } catch (err) {
+      console.error("Falha ao fazer upload", err);
+      alert("Falha ao salvar a imagem. Tente novamente.");
+    }
   }
 
   return (

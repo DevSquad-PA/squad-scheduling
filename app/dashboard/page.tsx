@@ -52,17 +52,22 @@ export default async function DashboardPage() {
   try {
     const appointments = await getAppointmentsByClinic(clinicMember.clinicId);
 
-    const mapped = appointments.map((a) => ({
-      nome: a.professional?.clinicId ?? "Sem profissional",
-      data: new Date(a.date).toLocaleDateString("pt-BR"),
-      hora: formatHora(a.time),
+    const mapped = appointments.map((a) => {
+      const user = a.professional?.user;
+      const profissionalNome = user?.name || [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Sem profissional";
+
+      return {
+        nome: profissionalNome,
+        data: new Date(a.date).toLocaleDateString("pt-BR"),
+        hora: formatHora(a.time),
       descricao: Array.isArray(a.services) ? a.services.join(", ") : "",
       cliente: a.patient?.firstName ?? "Sem nome",
       endereco: a.patient?.addressNumber ?? "Sem endereço",
       contato: a.patient?.phone ?? "Sem contato",
       cpf: a.patient?.cpf ?? "Sem CPF",
       email: a.patient?.email ?? "Sem email",
-    }));
+      };
+    });
 
     return <DashboardClient initial={mapped} />;
   } catch (err) {
