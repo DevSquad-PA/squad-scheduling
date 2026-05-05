@@ -237,6 +237,8 @@ async function seedDatabase() {
         data: {
           id: randomUUID(),
           clinicId: clinic.id,
+          firstName: `Paciente ${i}`,
+          lastName: "Teste",
         },
       });
 
