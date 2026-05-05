@@ -1,32 +1,37 @@
 "use client";
 
 import {
-  Sidebar,
-  SidebarProvider,
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarHeader,
-  SidebarInset,
-  SidebarTrigger,
-  SidebarFooter,
-} from "@/components/ui/sidebar/sidebar";
-import {
   Bolt,
   Calendar,
-  CalendarPlus,
   ChevronLeft,
   ChevronRight,
   CircleUser,
+  Loader2,
   LogOut,
   Newspaper,
   UserRoundPlus,
 } from "lucide-react";
-
-import { useRef, useState } from "react";
-import { useSidebar } from "@/components/ui/sidebar/sidebar";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAction } from "next-safe-action/hooks";
+import { useRef, useState } from "react";
+
+import { uploadAvatar } from "@/actions/upload-avatar";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar/sidebar";
+import { useSidebar } from "@/components/ui/sidebar/sidebar";
+import { useToast } from "@/components/ui/toast";
+import { authClient } from "@/lib/auth-client";
 
 function TriggerCollapsed() {
   const { state } = useSidebar();
@@ -48,23 +53,81 @@ function TriggerCollapsed() {
 
 type Props = {
   children: React.ReactNode;
-  user?: any;
+  user?: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  };
 };
 
 export default function SideBarAdmin({ children, user }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [image, setImage] = useState<string | null>(null);
+  const router = useRouter();
+  const toast = useToast();
+  const [image, setImage] = useState<string | null>(user?.image ?? null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const { executeAsync: executeUploadAvatar } = useAction(uploadAvatar);
 
   function handleClick() {
+    if (isUploading) return;
     inputRef.current?.click();
   }
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const url = URL.createObjectURL(file);
-    setImage(url);
+    const previewUrl = URL.createObjectURL(file);
+    const previousImage = image;
+    setImage(previewUrl);
+    setIsUploading(true);
+
+    try {
+      const result = await executeUploadAvatar({
+        avatar: file,
+      });
+
+      const imageUrl = result?.data?.imageUrl;
+
+      if (!imageUrl) {
+        const avatarErrors = result?.validationErrors?.avatar?._errors;
+        const formErrors = result?.validationErrors?._errors;
+        throw new Error(
+          avatarErrors?.[0] ??
+            formErrors?.[0] ??
+            result?.serverError ??
+            "Erro ao atualizar avatar."
+        );
+      }
+
+      setImage(imageUrl);
+      toast.success("Avatar atualizado.");
+      router.refresh();
+    } catch (error) {
+      setImage(previousImage);
+      toast.error(
+        error instanceof Error ? error.message : "Erro ao atualizar avatar."
+      );
+    } finally {
+      URL.revokeObjectURL(previewUrl);
+      setIsUploading(false);
+      e.target.value = "";
+    }
+  }
+
+  async function handleSignOut() {
+    setIsSigningOut(true);
+
+    try {
+      await authClient.signOut();
+      router.push("/login");
+      router.refresh();
+    } catch {
+      toast.error("Erro ao sair.");
+      setIsSigningOut(false);
+    }
   }
 
   return (
@@ -98,7 +161,7 @@ export default function SideBarAdmin({ children, user }: Props) {
               <Link href="">
                 <SidebarMenuButton>
                   <Newspaper />
-                  Relatórios
+                  Relatorios
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -107,7 +170,7 @@ export default function SideBarAdmin({ children, user }: Props) {
               <Link href="/dashboard/settings">
                 <SidebarMenuButton>
                   <Bolt />
-                  Configurações
+                  Configuracoes
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -116,7 +179,7 @@ export default function SideBarAdmin({ children, user }: Props) {
         <SidebarFooter className="my-6 flex flex-row items-center gap-3">
           <input
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             ref={inputRef}
             onChange={handleFileChange}
             className="hidden"
@@ -124,9 +187,18 @@ export default function SideBarAdmin({ children, user }: Props) {
 
           <div
             onClick={handleClick}
-            className="bg-muted flex h-12.5 w-12.5 cursor-pointer items-center justify-center overflow-hidden rounded-full"
+            className="bg-muted relative flex h-12.5 w-12.5 cursor-pointer items-center justify-center overflow-hidden rounded-full"
+            aria-label="Alterar avatar"
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                handleClick();
+              }
+            }}
           >
             {image ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={image}
                 alt="avatar"
@@ -135,14 +207,16 @@ export default function SideBarAdmin({ children, user }: Props) {
             ) : (
               <CircleUser size={50} />
             )}
+            {isUploading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white">
+                <Loader2 className="h-5 w-5 animate-spin" />
+              </div>
+            )}
           </div>
 
           <div>
             <p>Bem vindo</p>
-            <p>
-              Nome
-              {/* {user.name ?? user.email} */}
-            </p>
+            <p>{user?.name ?? user?.email}</p>
           </div>
         </SidebarFooter>
       </Sidebar>
@@ -151,11 +225,20 @@ export default function SideBarAdmin({ children, user }: Props) {
         <div className="flex items-center justify-between gap-2 border-b p-4">
           <div className="flex items-center gap-4">
             <TriggerCollapsed />
-            <h1 className="text-xl font-semibold">Administração</h1>
+            <h1 className="text-xl font-semibold">Administracao</h1>
           </div>
-          <button className="hover:text-primary flex cursor-pointer gap-4 text-xl font-bold">
-            Sair
-            <LogOut />
+          <button
+            type="button"
+            onClick={handleSignOut}
+            disabled={isSigningOut}
+            className="hover:text-primary flex cursor-pointer items-center gap-4 text-xl font-bold disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSigningOut ? "Saindo..." : "Sair"}
+            {isSigningOut ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <LogOut />
+            )}
           </button>
         </div>
         <hr />
