@@ -15,7 +15,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useRef, useState } from "react";
-
+import UploadPhotoDialog from "@/app/dashboard/components/UploadPhotoDialog";
 import { uploadAvatar } from "@/actions/upload-avatar";
 import {
   Sidebar,
@@ -69,53 +69,85 @@ export default function SideBarAdmin({ children, user }: Props) {
   const [isUploading, setIsUploading] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const { executeAsync: executeUploadAvatar } = useAction(uploadAvatar);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+const [selectedFile, setSelectedFile] = useState<File | null>(null);
+const [previewImage, setPreviewImage] = useState<string | null>(null);
 
+  
   function handleClick() {
     if (isUploading) return;
     inputRef.current?.click();
   }
 
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const file = e.target.files?.[0];
+  if (!file) return;
 
-    const previewUrl = URL.createObjectURL(file);
-    const previousImage = image;
-    setImage(previewUrl);
-    setIsUploading(true);
+  const previewUrl = URL.createObjectURL(file);
 
-    try {
-      const result = await executeUploadAvatar({
-        avatar: file,
-      });
+  setSelectedFile(file);
+  setPreviewImage(previewUrl);
+  setIsDialogOpen(true);
 
-      const imageUrl = result?.data?.imageUrl;
+  e.target.value = "";
+}
 
-      if (!imageUrl) {
-        const avatarErrors = result?.validationErrors?.avatar?._errors;
-        const formErrors = result?.validationErrors?._errors;
-        throw new Error(
-          avatarErrors?.[0] ??
-            formErrors?.[0] ??
-            result?.serverError ??
-            "Erro ao atualizar avatar."
-        );
-      }
+async function handleConfirmUpload() {
+  if (!selectedFile) return;
 
-      setImage(imageUrl);
-      toast.success("Avatar atualizado.");
-      router.refresh();
-    } catch (error) {
-      setImage(previousImage);
-      toast.error(
-        error instanceof Error ? error.message : "Erro ao atualizar avatar."
+  const previousImage = image;
+  setIsUploading(true);
+
+  try {
+    setImage(previewImage);
+
+    const result = await executeUploadAvatar({
+      avatar: selectedFile,
+    });
+
+    const imageUrl = result?.data?.imageUrl;
+
+    if (!imageUrl) {
+      const avatarErrors = result?.validationErrors?.avatar?._errors;
+      const formErrors = result?.validationErrors?._errors;
+
+      throw new Error(
+        avatarErrors?.[0] ??
+          formErrors?.[0] ??
+          result?.serverError ??
+          "Erro ao atualizar avatar."
       );
-    } finally {
-      URL.revokeObjectURL(previewUrl);
-      setIsUploading(false);
-      e.target.value = "";
     }
+
+    setImage(imageUrl);
+    toast.success("Avatar atualizado.");
+    setIsDialogOpen(false);
+    router.refresh();
+  } catch (error) {
+    setImage(previousImage);
+    toast.error(
+      error instanceof Error ? error.message : "Erro ao atualizar avatar."
+    );
+  } finally {
+    if (previewImage) URL.revokeObjectURL(previewImage);
+
+    setSelectedFile(null);
+    setPreviewImage(null);
+    setIsUploading(false);
   }
+}
+
+
+function handleDialogChange(open: boolean) {
+  if (!open && previewImage) {
+    URL.revokeObjectURL(previewImage);
+    setPreviewImage(null);
+    setSelectedFile(null);
+  }
+
+  setIsDialogOpen(open);
+}
+
 
   async function handleSignOut() {
     setIsSigningOut(true);
@@ -202,7 +234,7 @@ export default function SideBarAdmin({ children, user }: Props) {
               <img
                 src={image}
                 alt="avatar"
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover hover:bg-black/40"
               />
             ) : (
               <CircleUser size={50} />
@@ -245,6 +277,13 @@ export default function SideBarAdmin({ children, user }: Props) {
 
         {children}
       </SidebarInset>
+      <UploadPhotoDialog
+  open={isDialogOpen}
+  onOpenChange={handleDialogChange}
+  preview={previewImage}
+  isUploading={isUploading}
+  onConfirm={handleConfirmUpload}
+/>
     </SidebarProvider>
   );
 }
