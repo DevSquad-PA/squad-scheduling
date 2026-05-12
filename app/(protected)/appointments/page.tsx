@@ -4,9 +4,9 @@ import { getDashboardAppointmentsByClinic } from "@/data/appointments";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-import DashboardClient from "./DashboardClient";
+import AppointmentsClient from "./AppointmentsClient";
 
-export default async function DashboardPage() {
+export default async function AppointmentsPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -30,5 +30,5 @@ export default async function DashboardPage() {
     clinicMember.clinicId,
   );
 
-  return <DashboardClient initial={appointments} />;
+  return <AppointmentsClient initial={appointments} />;
 }

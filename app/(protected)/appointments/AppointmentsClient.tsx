@@ -9,7 +9,7 @@ import type { PropsAppointment } from "@/types/appointment/appointments";
 
 import AgendamentoDialog from "./components/AgendamentoDialog";
 
-export default function DashboardClient({
+export default function AppointmentsClient({
   initial,
 }: {
   initial: PropsAppointment[];

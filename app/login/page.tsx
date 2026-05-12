@@ -63,7 +63,7 @@ export default function Login() {
         toast.success(result.data.message);
       }
 
-      router.push("/dashboard");
+      router.push("/appointments");
       router.refresh();
     },
     onError: ({ error }) => {

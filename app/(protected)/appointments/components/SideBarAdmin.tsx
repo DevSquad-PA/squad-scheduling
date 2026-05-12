@@ -17,7 +17,7 @@ import { useAction } from "next-safe-action/hooks";
 import { useRef, useState } from "react";
 
 import { uploadAvatar } from "@/actions/upload-avatar";
-import UploadPhotoDialog from "@/app/dashboard/components/UploadPhotoDialog";
+import UploadPhotoDialog from "@/app/(protected)/appointments/components/UploadPhotoDialog";
 import {
   Sidebar,
   SidebarContent,
@@ -170,7 +170,7 @@ export default function SideBarAdmin({ children, user }: Props) {
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <Link href="/dashboard">
+              <Link href="/appointments">
                 <SidebarMenuButton>
                   <Calendar />
                   Agendamentos
@@ -179,7 +179,7 @@ export default function SideBarAdmin({ children, user }: Props) {
             </SidebarMenuItem>
 
             <SidebarMenuItem>
-              <Link href="/dashboard/professionals">
+              <Link href="/professionals">
                 <SidebarMenuButton>
                   <UserRoundPlus />
                   Profissionais
@@ -197,7 +197,7 @@ export default function SideBarAdmin({ children, user }: Props) {
             </SidebarMenuItem>
 
             <SidebarMenuItem>
-              <Link href="/dashboard/settings">
+              <Link href="/settings">
                 <SidebarMenuButton>
                   <Bolt />
                   Configuracoes

@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form";
 import z from "zod";
 
 import { register } from "@/actions/auth/register";
-import { PhoneInput } from "@/app/dashboard/components/PhoneInput";
+import { PhoneInput } from "@/app/(protected)/appointments/components/PhoneInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -89,7 +89,7 @@ export default function SignupPage() {
         toast.success(result.data.message);
       }
 
-      router.push("/dashboard");
+      router.push("/appointments");
       router.refresh();
     },
     onError: ({ error }) => {

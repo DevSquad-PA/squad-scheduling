@@ -3,7 +3,7 @@
 import { Search } from "lucide-react";
 import { useState } from "react";
 
-import { PhoneInput } from "@/app/dashboard/components/PhoneInput";
+import { PhoneInput } from "@/app/(protected)/appointments/components/PhoneInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -188,7 +188,9 @@ export default function ProfessionalsList({
         </div>
       </div>
 
-      <div className={`grid gap-4 ${COLUMNS === 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+      <div
+        className={`grid gap-4 ${COLUMNS === 4 ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"}`}
+      >
         {paginatedProfessionals.length === 0 && (
           <p className="col-span-full text-sm text-gray-500">
             Nenhum profissional encontrado.
@@ -220,20 +222,24 @@ export default function ProfessionalsList({
                 />
               </PaginationItem>
 
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <PaginationItem key={page}>
-                  <PaginationLink
-                    isActive={page === currentPage}
-                    onClick={() => setCurrentPage(page)}
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      isActive={page === currentPage}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                ),
+              )}
 
               <PaginationItem>
                 <PaginationNext
-                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(p + 1, totalPages))
+                  }
                   disabled={currentPage === totalPages}
                 />
               </PaginationItem>

@@ -1,11 +1,11 @@
 "use client";
+
 import { Search, UserPen } from "lucide-react";
 import { useState } from "react";
 
+import ColaboradorDialog from "@/app/(protected)/appointments/components/ColaboradorDialog";
 import { Input } from "@/components/ui/input";
 import type { Colaboradores } from "@/types/collaborators/collaborator";
-
-import ColaboradorDialog from "../components/ColaboradorDialog";
 
 export default function Settings() {
   const [search, setSearch] = useState("");
