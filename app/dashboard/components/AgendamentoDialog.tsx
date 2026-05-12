@@ -2,15 +2,17 @@
 
 import { createAppointment } from "@/actions/create-booking"
 
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useQuery } from "@tanstack/react-query"
 import { getProfessionalsByClinic } from "@/data/professional"
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import z from "zod"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { useToast } from "@/components/ui/toast"
 import {
   Dialog,
   DialogTrigger,
@@ -27,6 +29,7 @@ import {
   SelectItem,
 } from "@/components/ui/select"
 import { getAvailableTime } from "@/actions/get-date-available-time"
+import { getPatientsWithBookings } from "@/actions/get-patients-with-bookings"
 
 
 
@@ -73,34 +76,10 @@ function formatTelefone(value: string) {
 
 export default function AgendamentoDialog() {
   const [categoria, setCategoria] = useState("")
+  const [isNewClient, setIsNewClient] = useState(true)
+  const [selectedPatientId, setSelectedPatientId] = useState<string | undefined>(undefined)
   const [availableTimes, setAvailableTimes] = useState<string[]>([])
   const [especialistaId, setEspecialistaId] = useState("")
-  const mutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await createAppointment(data)
-
-      // next-safe-action retorna isso
-      if (res?.validationErrors) {
-        throw new Error(res.validationErrors._errors?.[0] || "Erro")
-      }
-
-      return res
-    },
-
-    onSuccess: () => {
-      console.log("Agendamento criado")
-
-      form.reset()
-      setCategoria("")
-      setEspecialistaId("")
-
-    },
-
-    onError: (err: any) => {
-      console.log("Erro:", err.message)
-    },
-  })
-
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -113,6 +92,37 @@ export default function AgendamentoDialog() {
       especialista: "",
       date: "",
       hora: "",
+    },
+  })
+
+  const queryClient = useQueryClient()
+  const toast = useToast()
+  const router = useRouter()
+
+  const mutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await createAppointment(data)
+
+      // next-safe-action retorna isso
+      if (res?.validationErrors) {
+        throw new Error(res.validationErrors._errors?.[0] || "Erro")
+      }
+
+      return res
+    },
+    onSuccess: (created) => {
+      console.log("Agendamento criado (response):", created)
+      toast.success("Agendamento criado")
+      form.reset()
+      setCategoria("")
+      setEspecialistaId("")
+      router.refresh()
+    },
+
+    onError: (err: any) => {
+      console.error("Erro ao criar agendamento:", err)
+      const msg = err?.message || "Erro ao criar agendamento"
+      toast.error("Erro", msg)
     },
   })
 
@@ -150,8 +160,9 @@ export default function AgendamentoDialog() {
 
     const [year, month, day] = data.date.split("-").map(Number)
     const [hours, minutes] = data.hora.split(":").map(Number)
-    const date = new Date(year, month - 1, day)
-    const time = new Date(1970, 0, 1, hours, minutes)
+    // send date and time as strings to server for consistent parsing
+    const date = data.date // "YYYY-MM-DD"
+    const time = data.hora // "HH:mm"
 
     const selectedProfessional = professionals?.find(
       (p) => p.id === especialistaId
@@ -163,18 +174,29 @@ export default function AgendamentoDialog() {
       return
     }
 
-    const mapped = {
-      // name: data.nome,
-      // cpf: data.cpf,
-      // phone: data.contato,
-      // address: data.endereco,
+    const mapped: any = {
       clinicId: selectedProfessional?.clinicId,
       professionalId: selectedProfessional?.id,
-      patientId: "008500b9-912b-44fd-bafa-e270acd7f432",
       date: date,
       time: time,
       services: [data.servico],
     }
+
+    if (!isNewClient) {
+      if (!selectedPatientId) {
+        console.log("Selecione um cliente existente")
+        return
+      }
+      mapped.patientId = selectedPatientId
+    } else {
+      mapped.patient = {
+        name: data.nome,
+        cpf: data.cpf,
+        phone: data.contato,
+        address: data.endereco,
+      }
+    }
+
     console.log("agendadov:", mapped)
     mutation.mutate(mapped)
   }
@@ -184,6 +206,14 @@ export default function AgendamentoDialog() {
   const { data: professionals = [], isLoading } = useQuery({
     queryKey: ["professionals", clinicId],
     queryFn: () => getProfessionalsByClinic(clinicId),
+  })
+
+  const { data: patients = [] } = useQuery({
+    queryKey: ["patientsWithBookings", clinicId],
+    queryFn: async () => {
+      const res = await getPatientsWithBookings({ clinicId })
+      return res?.data ?? []
+    },
   })
 
 
@@ -217,56 +247,103 @@ export default function AgendamentoDialog() {
           className="flex flex-col gap-2"
         >
 
-          <Input placeholder="Nome Completo" {...form.register("nome")} />
-          {error.nome && (
-            <span className="text-alert text-xs">{error.nome.message}</span>
-          )}
+          <div className="flex gap-4 items-center">
+            <label className="flex items-center gap-2">
+              <input type="radio" name="clientType" checked={isNewClient} onChange={() => { setIsNewClient(true); setSelectedPatientId(undefined); form.setValue("nome", ""); form.setValue("cpf", ""); form.setValue("endereco", ""); form.setValue("contato", "") }} />
+              <span>Novo cliente</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input type="radio" name="clientType" checked={!isNewClient} onChange={() => { setIsNewClient(false); }} />
+              <span>Cliente existente</span>
+            </label>
+          </div>
 
+          {isNewClient ? (
+            <>
+              <Input placeholder="Nome Completo" {...form.register("nome")} />
+              {error.nome && (
+                <span className="text-alert text-xs">{error.nome.message}</span>
+              )}
 
-          <Controller
-            control={form.control}
-            name="cpf"
-            render={({ field }) => (
-              <Input
-                placeholder="CPF"
-                value={formatCPF(field.value || "")}
-                onChange={(e) => {
-                  const raw = unmask(e.target.value).slice(0, 11)
-                  field.onChange(raw)
-                }}
+              <Controller
+                control={form.control}
+                name="cpf"
+                render={({ field }) => (
+                  <Input
+                    placeholder="CPF"
+                    value={formatCPF(field.value || "")}
+                    onChange={(e) => {
+                      const raw = unmask(e.target.value).slice(0, 11)
+                      field.onChange(raw)
+                    }}
+                  />
+                )}
               />
-            )}
-          />
-          {error.cpf && (
-            <span className="text-alert text-xs">{error.cpf.message}</span>
-          )}
+              {error.cpf && (
+                <span className="text-alert text-xs">{error.cpf.message}</span>
+              )}
 
-          <Input placeholder="Endereço" {...form.register("endereco")} />
-          {error.endereco && (
-            <span className="text-alert text-xs">
-              {error.endereco.message}
-            </span>
-          )}
+              <Input placeholder="Endereço" {...form.register("endereco")} />
+              {error.endereco && (
+                <span className="text-alert text-xs">
+                  {error.endereco.message}
+                </span>
+              )}
 
-          <Controller
-            control={form.control}
-            name="contato"
-            render={({ field }) => (
-              <Input
-                placeholder="Contato"
-                value={formatTelefone(field.value || "")}
-                onChange={(e) => {
-                  const raw = unmask(e.target.value).slice(0, 11)
-                  field.onChange(raw)
-                }}
+              <Controller
+                control={form.control}
+                name="contato"
+                render={({ field }) => (
+                  <Input
+                    placeholder="Contato"
+                    value={formatTelefone(field.value || "")}
+                    onChange={(e) => {
+                      const raw = unmask(e.target.value).slice(0, 11)
+                      field.onChange(raw)
+                    }}
+                  />
+                )}
               />
-            )}
-          />
-          {error.contato && (
-            <span className="text-alert text-xs">
-              {error.contato.message}
-            </span>
+              {error.contato && (
+                <span className="text-alert text-xs">
+                  {error.contato.message}
+                </span>
+              )}
+            </>
+          ) : (
+            <>
+              <Select
+                value={selectedPatientId}
+                onValueChange={(v) => {
+                  setSelectedPatientId(v)
+                  const p = patients.find((p: any) => p.id === v)
+                  form.setValue("nome", p?.firstName ?? "")
+                  form.setValue("cpf", p?.cpf ?? "")
+                  form.setValue("endereco", p?.addressNumber ?? "")
+                  form.setValue("contato", p?.phone ?? "")
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecionar cliente" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {patients.length === 0 ? (
+                    <SelectItem value="empty" disabled>Nenhum cliente com agendamento</SelectItem>
+                  ) : (
+                    patients.map((p: any) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.firstName} {p.lastName ?? ""} - {p.phone ?? p.cpf}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </>
           )}
+
+
+          
 
           <Select
             value={categoria}

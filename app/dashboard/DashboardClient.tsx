@@ -61,13 +61,12 @@ export default function DashboardClient({
   }
 
   function mesmaData(d1: Date | string, d2: Date) {
+    const dateA = new Date(d1 instanceof Date ? d1 : new Date(d1))
+    const dateB = new Date(d2 instanceof Date ? d2 : new Date(d2))
     return (
-      new Date(d1).toLocaleDateString("pt-BR", {
-        timeZone: "America/Sao_Paulo",
-      }) ===
-      new Date(d2).toLocaleDateString("pt-BR", {
-        timeZone: "America/Sao_Paulo",
-      })
+      dateA.getFullYear() === dateB.getFullYear() &&
+      dateA.getMonth() === dateB.getMonth() &&
+      dateA.getDate() === dateB.getDate()
     )
   }
 
