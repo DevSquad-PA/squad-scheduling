@@ -1,3 +1,8 @@
+"use server";
+
+import { headers } from "next/headers";
+
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatHora } from "@/lib/utils";
 import type { PropsAppointment } from "@/types/appointment/appointments";
@@ -37,4 +42,25 @@ export const getDashboardAppointmentsByClinic = async (
     cpf: appointment.patient?.cpf ?? "Sem CPF",
     email: appointment.patient?.email ?? "Sem email",
   }));
+};
+
+export const getDashboardAppointmentsByCurrentUser = async (): Promise<PropsAppointment[]> => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session) {
+    throw new Error("Unauthorized");
+  }
+
+  const clinicMember = await prisma.clinicMember.findFirst({
+    where: { userId: session.user.id },
+    select: { clinicId: true },
+  });
+
+  if (!clinicMember?.clinicId) {
+    throw new Error("Clinic not found");
+  }
+
+  return getDashboardAppointmentsByClinic(clinicMember.clinicId);
 };

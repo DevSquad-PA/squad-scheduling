@@ -3,10 +3,22 @@ import { headers } from "next/headers";
 import { getDashboardAppointmentsByClinic } from "@/data/appointments";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { formatInputDate, getSingleParam, parseInputDate } from "@/lib/utils";
 
-import AppointmentsClient from "./components/AppointmentsClient";
+import AppointmentsDialog from "./components/AppointmentsDialog";
+import AppointmentsFilters from "./components/AppointmentsFilters";
+import AppointmentsList from "./components/AppointmentsList";
 
-export default async function AppointmentsPage() {
+type AppointmentsPageProps = {
+  searchParams: Promise<{
+    search?: string | string[];
+    date?: string | string[];
+  }>;
+};
+
+export default async function AppointmentsPage({
+  searchParams,
+}: AppointmentsPageProps) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -30,5 +42,31 @@ export default async function AppointmentsPage() {
     clinicMember.clinicId,
   );
 
-  return <AppointmentsClient initial={appointments} />;
+  const params = await searchParams;
+  const search = getSingleParam(params.search);
+  const inputDate = getSingleParam(params.date) || formatInputDate(new Date());
+  const selectedDate = parseInputDate(inputDate) ?? new Date();
+  const selectedInputDate = formatInputDate(selectedDate);
+
+  return (
+    <div className="flex flex-col gap-4 p-8">
+      <h2 className="mb-2 text-base font-bold">Agendamentos</h2>
+
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-start">
+        <AppointmentsFilters
+          key={`${search}-${selectedInputDate}`}
+          search={search}
+          date={selectedInputDate}
+        />
+        <AppointmentsDialog clinicId={clinicMember.clinicId} />
+      </div>
+
+      <AppointmentsList
+        clinicId={clinicMember.clinicId}
+        initialAppointments={appointments}
+        search={search}
+        selectedDate={selectedInputDate}
+      />
+    </div>
+  );
 }

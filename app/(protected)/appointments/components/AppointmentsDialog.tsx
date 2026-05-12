@@ -1,8 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import z from "zod";
@@ -88,7 +87,7 @@ function formatTelefone(value: string) {
     .replace(/(\d{5})(\d)/, "$1-$2");
 }
 
-export default function AppointmentsDialog() {
+export default function AppointmentsDialog({ clinicId }: { clinicId: string }) {
   const [categoria, setCategoria] = useState("");
   const [isNewClient, setIsNewClient] = useState(true);
   const [selectedPatientId, setSelectedPatientId] = useState<
@@ -111,7 +110,7 @@ export default function AppointmentsDialog() {
   });
 
   const toast = useToast();
-  const router = useRouter();
+  const queryClient = useQueryClient();
 
   const mutation = useMutation({
     mutationFn: async (data: CreateAppointmentInput) => {
@@ -130,7 +129,7 @@ export default function AppointmentsDialog() {
       form.reset();
       setCategoria("");
       setEspecialistaId("");
-      router.refresh();
+      queryClient.invalidateQueries({ queryKey: ["appointments", clinicId] });
     },
 
     onError: (err: Error) => {
@@ -211,8 +210,6 @@ export default function AppointmentsDialog() {
     console.log("agendadov:", mapped);
     mutation.mutate(mapped);
   };
-
-  const clinicId = "00958c6b-316b-4b1d-9b17-b08d7ca60fc9";
 
   const { data: professionals = [], isLoading } = useQuery({
     queryKey: ["professionals", clinicId],
