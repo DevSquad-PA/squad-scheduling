@@ -32,6 +32,35 @@ const formSchema = z
   });
 
 type FormSchema = z.infer<typeof formSchema>;
+type FormField = keyof FormSchema;
+
+const formFields: FormField[] = [
+  "name",
+  "cpf",
+  "dateOfBirth",
+  "phone",
+  "email",
+  "password",
+  "confirmPassword",
+];
+
+function isFormField(value: string): value is FormField {
+  return formFields.includes(value as FormField);
+}
+
+function getValidationMessage(value: unknown) {
+  if (Array.isArray(value)) return value.join(" ");
+  if (
+    value &&
+    typeof value === "object" &&
+    "_errors" in value &&
+    Array.isArray(value._errors)
+  ) {
+    return value._errors.join(" ");
+  }
+
+  return undefined;
+}
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -65,15 +94,17 @@ export default function SignupPage() {
     },
     onError: ({ error }) => {
       if (error?.validationErrors) {
-        Object.entries(error.validationErrors).forEach(([k, v]: any) => {
-          form.setError(k as any, {
+        Object.entries(error.validationErrors).forEach(([key, value]) => {
+          if (!isFormField(key)) return;
+
+          form.setError(key, {
             type: "server",
-            message: (v as string[]).join(" "),
+            message: getValidationMessage(value),
           });
         });
-        const errs = (error as any)._errors as string[] | undefined;
-        if (errs && Array.isArray(errs) && errs.length) {
-          toast.error(errs.join(" "));
+        const errs = getValidationMessage(error.validationErrors);
+        if (errs) {
+          toast.error(errs);
         }
         return;
       }

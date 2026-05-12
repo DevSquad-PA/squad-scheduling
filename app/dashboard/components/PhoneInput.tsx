@@ -2,7 +2,7 @@ import React from "react";
 
 import { cn } from "@/lib/utils";
 
-interface PhoneInputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+type PhoneInputProps = React.InputHTMLAttributes<HTMLInputElement>;
 
 const formatPhone = (value: string) => {
   let digits = value.replace(/\D/g, "");

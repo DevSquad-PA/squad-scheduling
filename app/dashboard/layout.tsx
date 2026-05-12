@@ -1,23 +1,22 @@
-import { headers } from "next/headers"
-import { redirect } from "next/navigation"
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
-import { auth } from "@/lib/auth"
+import { auth } from "@/lib/auth";
 
-import SideBarAdmin from "./components/SideBarAdmin"
+import SideBarAdmin from "./components/SideBarAdmin";
 
-export default async function Layout({ children }: any) {
-
+export default async function Layout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const session = await auth.api.getSession({
-    headers: await headers()
-  })
+    headers: await headers(),
+  });
 
   if (!session) {
-    redirect("/login")
+    redirect("/login");
   }
 
-  return (
-    <SideBarAdmin user={session.user}>
-      {children}
-    </SideBarAdmin>
-  )
+  return <SideBarAdmin user={session.user}>{children}</SideBarAdmin>;
 }

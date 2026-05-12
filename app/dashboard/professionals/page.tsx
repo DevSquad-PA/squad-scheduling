@@ -16,14 +16,11 @@ export default async function ProfessionalsPage() {
   }
 
   const userId = session.user.id;
-  console.log("[professionals] userId:", userId);
 
   const clinicMember = await prisma.clinicMember.findFirst({
     where: { userId },
     select: { clinicId: true },
   });
-
-  console.log("[professionals] clinicMember:", clinicMember);
 
   if (!clinicMember?.clinicId) {
     return (

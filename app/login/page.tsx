@@ -20,10 +20,30 @@ const formSchema = z.object({
 });
 
 type FormSchema = z.infer<typeof formSchema>;
+type FormField = keyof FormSchema;
+
+const formFields: FormField[] = ["email", "password"];
+
+function isFormField(value: string): value is FormField {
+  return formFields.includes(value as FormField);
+}
+
+function getValidationMessage(value: unknown) {
+  if (Array.isArray(value)) return value.join(" ");
+  if (
+    value &&
+    typeof value === "object" &&
+    "_errors" in value &&
+    Array.isArray(value._errors)
+  ) {
+    return value._errors.join(" ");
+  }
+
+  return undefined;
+}
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
 
@@ -48,10 +68,12 @@ export default function Login() {
     },
     onError: ({ error }) => {
       if (error?.validationErrors) {
-        Object.entries(error.validationErrors).forEach(([k, v]: any) => {
-          form.setError(k as any, {
+        Object.entries(error.validationErrors).forEach(([key, value]) => {
+          if (!isFormField(key)) return;
+
+          form.setError(key, {
             type: "server",
-            message: (v as string[]).join(" "),
+            message: getValidationMessage(value),
           });
         });
 
@@ -134,9 +156,9 @@ export default function Login() {
           <Button
             type="submit"
             variant="themegreen"
-            disabled={status === "executing" || isLoading}
+            disabled={status === "executing"}
           >
-            {status === "executing" || isLoading ? "Entrando..." : "Entrar"}
+            {status === "executing" ? "Entrando..." : "Entrar"}
           </Button>
         </form>
 

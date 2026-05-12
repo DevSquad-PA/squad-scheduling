@@ -13,7 +13,7 @@ const inputSchema = z.object({
 
 export const cancelAppointment = protectedActionClient
   .inputSchema(inputSchema)
-  .action(async ({ parsedInput: { appointmentId }, ctx: { user } }) => {
+  .action(async ({ parsedInput: { appointmentId } }) => {
     const appointment = await prisma.appointment.findUnique({
       where: {
         id: appointmentId,
@@ -25,7 +25,7 @@ export const cancelAppointment = protectedActionClient
 
     if (!appointment) {
       returnValidationErrors(inputSchema, {
-        _errors: ["Agendamento não encontrado."],
+        _errors: ["Agendamento nao encontrado."],
       });
     }
 
@@ -40,12 +40,6 @@ export const cancelAppointment = protectedActionClient
     if (dateTime <= new Date()) {
       returnValidationErrors(inputSchema, {
         _errors: ["Não é possível cancelar um agendamento passado."],
-      });
-    }
-
-    if ((appointment as any).status === "cancelled") {
-      returnValidationErrors(inputSchema, {
-        _errors: ["Este agendamento já foi cancelado."],
       });
     }
 

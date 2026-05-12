@@ -18,27 +18,15 @@ import { Input } from "@/components/ui/input";
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-
-type Professional = {
-  id: string;
-  userId: string | null;
-  clinicId: string | null;
-  specialty: string | null;
-  services: string[];
-  createdAt: Date | null;
-  user: {
-    id: string;
-    name: string | null;
-    email: string;
-    phone: string | null;
-  } | null;
-};
+import type {
+  CreateProfessionalInput,
+  Professional,
+} from "@/types/professionals/professional";
 
 export default function ProfessionalsList({
   initial,
@@ -53,7 +41,7 @@ export default function ProfessionalsList({
   const [open, setOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  async function createProfessional(payload: any) {
+  async function createProfessional(payload: CreateProfessionalInput) {
     try {
       const res = await fetch("/api/professionals", {
         method: "POST",
@@ -89,7 +77,7 @@ export default function ProfessionalsList({
     onSubmit,
     onCancel,
   }: {
-    onSubmit: (p: any) => void;
+    onSubmit: (p: CreateProfessionalInput) => void;
     onCancel: () => void;
   }) => {
     const [name, setName] = useState("");
@@ -136,7 +124,7 @@ export default function ProfessionalsList({
           <span className="text-sm">Telefone</span>
           <PhoneInput
             value={phone}
-            onChange={(e: any) => setPhone(e.target.value)}
+            onChange={(e) => setPhone(e.target.value)}
           />
         </label>
         <label className="flex flex-col gap-1">

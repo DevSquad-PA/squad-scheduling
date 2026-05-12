@@ -1,25 +1,16 @@
-"use client"
+"use client";
 import { Search, UserPen } from "lucide-react";
 import { useState } from "react";
 
 import { Input } from "@/components/ui/input";
+import type { Colaboradores } from "@/types/collaborators/collaborator";
 
 import ColaboradorDialog from "../components/ColaboradorDialog";
 
-export default function Settings () {
+export default function Settings() {
+  const [search, setSearch] = useState("");
 
-    type Colaboradores = {
-  nome: string
-  usuario: string
-  email: string
-  senha: string
-  contato: string
-  tipo: string
-}
-
-const [search, setSearch] = useState("")
-
-     const exemplo: Colaboradores[] = [
+  const exemplo: Colaboradores[] = [
     {
       nome: "João Fernando da lima",
       usuario: "myuser",
@@ -36,51 +27,47 @@ const [search, setSearch] = useState("")
       contato: "(DDD) 0000-0000",
       tipo: "Usuário",
     },
-  ]
+  ];
 
-    return(<div className="p-8 flex flex-col gap-4">
-    <h2 className="font-bold text-base mb-2">Configurações</h2>
-     <div className="flex items-center gap-4">
-            <ColaboradorDialog />
-    
-            <div className="relative w-fit">
-              <Input
-                placeholder="Pesquisar"
-                className="w-80 pr-10"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-text2 w-4 h-4" />
-            </div>
-          </div>
-    
-    
+  return (
+    <div className="flex flex-col gap-4 p-8">
+      <h2 className="mb-2 text-base font-bold">Configurações</h2>
+      <div className="flex items-center gap-4">
+        <ColaboradorDialog />
 
-    
-          {exemplo.length === 0 && (
-            <p className="text-sm text-gray-500">
-              Nenhum agendamento
-            </p>
-          )}
-    
-          {exemplo.map((e, i) => (
-            <div
-              key={i}
-              className="grid grid-cols-[1fr_1fr_1fr_1fr_1fr_auto] gap-x-6 gap-y-1 py-2 items-center w-full">
-              <p className="truncate">{e.nome}</p>
-              <p className="truncate">{e.tipo}</p>
-              <p className="truncate">{e.email}</p>
-              <p className="truncate">{e.usuario}</p>
-              <p className="truncate">{e.contato}</p>
-            
-    
-              <button className="cursor-pointer">
-                <UserPen className="hover:text-primary" />
-              </button>
-    
-              <span className="col-span-full h-px bg-text2"></span>
-            </div>
-          ))}
-    
-    </div>)
+        <div className="relative w-fit">
+          <Input
+            placeholder="Pesquisar"
+            className="w-80 pr-10"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <Search className="text-text2 absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
+        </div>
+      </div>
+
+      {exemplo.length === 0 && (
+        <p className="text-sm text-gray-500">Nenhum agendamento</p>
+      )}
+
+      {exemplo.map((e, i) => (
+        <div
+          key={i}
+          className="grid w-full grid-cols-[1fr_1fr_1fr_1fr_1fr_auto] items-center gap-x-6 gap-y-1 py-2"
+        >
+          <p className="truncate">{e.nome}</p>
+          <p className="truncate">{e.tipo}</p>
+          <p className="truncate">{e.email}</p>
+          <p className="truncate">{e.usuario}</p>
+          <p className="truncate">{e.contato}</p>
+
+          <button className="cursor-pointer">
+            <UserPen className="hover:text-primary" />
+          </button>
+
+          <span className="bg-text2 col-span-full h-px"></span>
+        </div>
+      ))}
+    </div>
+  );
 }

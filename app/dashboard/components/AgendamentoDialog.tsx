@@ -1,17 +1,16 @@
-"use client"
+"use client";
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useQuery } from "@tanstack/react-query"
-import { useRouter } from "next/navigation"
-import { useEffect,useState } from "react"
-import { Controller,useForm } from "react-hook-form"
-import z from "zod"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import z from "zod";
 
-import { createAppointment } from "@/actions/create-booking"
-import { getAvailableTime } from "@/actions/get-date-available-time"
-import { getPatientsWithBookings } from "@/actions/get-patients-with-bookings"
-import { Button } from "@/components/ui/button"
+import { createAppointment } from "@/actions/create-booking";
+import { getAvailableTime } from "@/actions/get-date-available-time";
+import { getPatientsWithBookings } from "@/actions/get-patients-with-bookings";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -19,20 +18,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { useToast } from "@/components/ui/toast"
-import { getProfessionalsByClinic } from "@/data/professional"
-
-
-
+} from "@/components/ui/select";
+import { useToast } from "@/components/ui/toast";
+import { getProfessionalsByClinic } from "@/data/professional";
+import type { PatientWithBookings } from "@/types/patient/patient";
 
 const formSchema = z.object({
   nome: z.string().min(3, "Nome obrigatório"),
@@ -44,18 +41,36 @@ const formSchema = z.object({
   especialista: z.string().min(1, "Selecione o especialista"),
 
   hora: z.string().min(1, "Selecione uma hora"),
-  date: z.string().refine((date) => {
-    const hoje = new Date().toISOString().split("T")[0]
-    return date >= hoje
-  }, {
-    message: "Data não pode ser no passado"
-  })
-})
+  date: z.string().refine(
+    (date) => {
+      const hoje = new Date().toISOString().split("T")[0];
+      return date >= hoje;
+    },
+    {
+      message: "Data não pode ser no passado",
+    },
+  ),
+});
 
-type FormSchema = z.infer<typeof formSchema>
+type FormSchema = z.infer<typeof formSchema>;
+
+type CreateAppointmentInput = {
+  clinicId: string;
+  professionalId: string;
+  patientId?: string;
+  patient?: {
+    name: string;
+    cpf: string;
+    phone: string;
+    address: string;
+  };
+  date: string;
+  time: string;
+  services: string[];
+};
 
 function unmask(value: string) {
-  return value.replace(/\D/g, "")
+  return value.replace(/\D/g, "");
 }
 
 function formatCPF(value: string) {
@@ -63,23 +78,23 @@ function formatCPF(value: string) {
     .replace(/\D/g, "")
     .replace(/(\d{3})(\d)/, "$1.$2")
     .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d{1,2})$/, "$1-$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 }
 
 function formatTelefone(value: string) {
   return value
     .replace(/\D/g, "")
     .replace(/(\d{2})(\d)/, "($1) $2")
-    .replace(/(\d{5})(\d)/, "$1-$2")
+    .replace(/(\d{5})(\d)/, "$1-$2");
 }
 
-
 export default function AgendamentoDialog() {
-  const [categoria, setCategoria] = useState("")
-  const [isNewClient, setIsNewClient] = useState(true)
-  const [selectedPatientId, setSelectedPatientId] = useState<string | undefined>(undefined)
-  const [availableTimes, setAvailableTimes] = useState<string[]>([])
-  const [especialistaId, setEspecialistaId] = useState("")
+  const [categoria, setCategoria] = useState("");
+  const [isNewClient, setIsNewClient] = useState(true);
+  const [selectedPatientId, setSelectedPatientId] = useState<
+    string | undefined
+  >(undefined);
+  const [especialistaId, setEspecialistaId] = useState("");
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -93,148 +108,143 @@ export default function AgendamentoDialog() {
       date: "",
       hora: "",
     },
-  })
+  });
 
-  const queryClient = useQueryClient()
-  const toast = useToast()
-  const router = useRouter()
+  const toast = useToast();
+  const router = useRouter();
 
   const mutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await createAppointment(data)
+    mutationFn: async (data: CreateAppointmentInput) => {
+      const res = await createAppointment(data);
 
       // next-safe-action retorna isso
       if (res?.validationErrors) {
-        throw new Error(res.validationErrors._errors?.[0] || "Erro")
+        throw new Error(res.validationErrors._errors?.[0] || "Erro");
       }
 
-      return res
+      return res;
     },
     onSuccess: (created) => {
-      console.log("Agendamento criado (response):", created)
-      toast.success("Agendamento criado")
-      form.reset()
-      setCategoria("")
-      setEspecialistaId("")
-      router.refresh()
+      console.log("Agendamento criado (response):", created);
+      toast.success("Agendamento criado");
+      form.reset();
+      setCategoria("");
+      setEspecialistaId("");
+      router.refresh();
     },
 
-    onError: (err: any) => {
-      console.error("Erro ao criar agendamento:", err)
-      const msg = err?.message || "Erro ao criar agendamento"
-      toast.error("Erro", msg)
+    onError: (err: Error) => {
+      console.error("Erro ao criar agendamento:", err);
+      const msg = err.message || "Erro ao criar agendamento";
+      toast.error("Erro", msg);
     },
-  })
+  });
 
+  const selectedDate = useWatch({
+    control: form.control,
+    name: "date",
+  });
+  const selectedTime = useWatch({
+    control: form.control,
+    name: "hora",
+  });
 
+  const { data: availableTimes = [] } = useQuery<string[]>({
+    queryKey: ["availableTimes", especialistaId, selectedDate],
+    enabled: Boolean(selectedDate && especialistaId),
+    queryFn: async () => {
+      const [year, month, day] = selectedDate.split("-").map(Number);
+      const parsedDate = new Date(year, month - 1, day);
 
-  const selectedDate = form.watch("date")
+      const res = await getAvailableTime({
+        professionalId: especialistaId,
+        date: parsedDate,
+      });
+
+      return res?.data ?? [];
+    },
+  });
 
   useEffect(() => {
-    form.setValue("hora", "")
-  }, [selectedDate])
+    form.setValue("hora", "");
+  }, [form, selectedDate]);
 
-  useEffect(() => {
-    carregarHorarios(selectedDate, especialistaId)
-  }, [selectedDate, especialistaId])
-
-  async function carregarHorarios(date: string, professionalId: string) {
-    if (!date || !professionalId) return
-
-    const [year, month, day] = date.split("-").map(Number)
-    const parsedDate = new Date(year, month - 1, day)
-
-    const res = await getAvailableTime({
-      professionalId,
-      date: parsedDate,
-    })
-
-    if (res?.data) {
-      setAvailableTimes(res.data)
-    }
-  }
-
-  const error = form.formState.errors
+  const error = form.formState.errors;
 
   const onSubmit = (data: FormSchema) => {
-
-    const [year, month, day] = data.date.split("-").map(Number)
-    const [hours, minutes] = data.hora.split(":").map(Number)
     // send date and time as strings to server for consistent parsing
-    const date = data.date // "YYYY-MM-DD"
-    const time = data.hora // "HH:mm"
+    const date = data.date; // "YYYY-MM-DD"
+    const time = data.hora; // "HH:mm"
 
     const selectedProfessional = professionals?.find(
-      (p) => p.id === especialistaId
-    )
-
+      (p) => p.id === especialistaId,
+    );
 
     if (!professionals || !selectedProfessional) {
-      console.log("Profissional não disponível")
-      return
+      console.log("Profissional não disponível");
+      return;
     }
 
-    const mapped: any = {
-      clinicId: selectedProfessional?.clinicId,
-      professionalId: selectedProfessional?.id,
+    const mapped: CreateAppointmentInput = {
+      clinicId,
+      professionalId: selectedProfessional.id,
       date: date,
       time: time,
       services: [data.servico],
-    }
+    };
 
     if (!isNewClient) {
       if (!selectedPatientId) {
-        console.log("Selecione um cliente existente")
-        return
+        console.log("Selecione um cliente existente");
+        return;
       }
-      mapped.patientId = selectedPatientId
+      mapped.patientId = selectedPatientId;
     } else {
       mapped.patient = {
         name: data.nome,
         cpf: data.cpf,
         phone: data.contato,
         address: data.endereco,
-      }
+      };
     }
 
-    console.log("agendadov:", mapped)
-    mutation.mutate(mapped)
-  }
+    console.log("agendadov:", mapped);
+    mutation.mutate(mapped);
+  };
 
-  const clinicId = "00958c6b-316b-4b1d-9b17-b08d7ca60fc9" 
+  const clinicId = "00958c6b-316b-4b1d-9b17-b08d7ca60fc9";
 
   const { data: professionals = [], isLoading } = useQuery({
     queryKey: ["professionals", clinicId],
     queryFn: () => getProfessionalsByClinic(clinicId),
-  })
+  });
 
-  const { data: patients = [] } = useQuery({
+  const { data: patients = [] } = useQuery<PatientWithBookings[]>({
     queryKey: ["patientsWithBookings", clinicId],
     queryFn: async () => {
-      const res = await getPatientsWithBookings({ clinicId })
-      return res?.data ?? []
+      const res = await getPatientsWithBookings({ clinicId });
+      return res?.data ?? [];
     },
-  })
-
-
+  });
 
   const categorias = Array.from(
     new Set(
       (professionals ?? [])
         .map((p) => p.specialty)
-        .filter((s): s is string => !!s)
-    )
-  )
+        .filter((s): s is string => !!s),
+    ),
+  );
 
   const filteredProfessionals = (professionals ?? []).filter(
-    (p) => p.specialty === categoria
-  )
-
+    (p) => p.specialty === categoria,
+  );
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="themegreen" className="w-fit">+ Agendar</Button>
+        <Button variant="themegreen" className="w-fit">
+          + Agendar
+        </Button>
       </DialogTrigger>
 
       <DialogContent>
@@ -246,14 +256,32 @@ export default function AgendamentoDialog() {
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-col gap-2"
         >
-
-          <div className="flex gap-4 items-center">
+          <div className="flex items-center gap-4">
             <label className="flex items-center gap-2">
-              <input type="radio" name="clientType" checked={isNewClient} onChange={() => { setIsNewClient(true); setSelectedPatientId(undefined); form.setValue("nome", ""); form.setValue("cpf", ""); form.setValue("endereco", ""); form.setValue("contato", "") }} />
+              <input
+                type="radio"
+                name="clientType"
+                checked={isNewClient}
+                onChange={() => {
+                  setIsNewClient(true);
+                  setSelectedPatientId(undefined);
+                  form.setValue("nome", "");
+                  form.setValue("cpf", "");
+                  form.setValue("endereco", "");
+                  form.setValue("contato", "");
+                }}
+              />
               <span>Novo cliente</span>
             </label>
             <label className="flex items-center gap-2">
-              <input type="radio" name="clientType" checked={!isNewClient} onChange={() => { setIsNewClient(false); }} />
+              <input
+                type="radio"
+                name="clientType"
+                checked={!isNewClient}
+                onChange={() => {
+                  setIsNewClient(false);
+                }}
+              />
               <span>Cliente existente</span>
             </label>
           </div>
@@ -273,8 +301,8 @@ export default function AgendamentoDialog() {
                     placeholder="CPF"
                     value={formatCPF(field.value || "")}
                     onChange={(e) => {
-                      const raw = unmask(e.target.value).slice(0, 11)
-                      field.onChange(raw)
+                      const raw = unmask(e.target.value).slice(0, 11);
+                      field.onChange(raw);
                     }}
                   />
                 )}
@@ -298,8 +326,8 @@ export default function AgendamentoDialog() {
                     placeholder="Contato"
                     value={formatTelefone(field.value || "")}
                     onChange={(e) => {
-                      const raw = unmask(e.target.value).slice(0, 11)
-                      field.onChange(raw)
+                      const raw = unmask(e.target.value).slice(0, 11);
+                      field.onChange(raw);
                     }}
                   />
                 )}
@@ -315,12 +343,12 @@ export default function AgendamentoDialog() {
               <Select
                 value={selectedPatientId}
                 onValueChange={(v) => {
-                  setSelectedPatientId(v)
-                  const p = patients.find((p: any) => p.id === v)
-                  form.setValue("nome", p?.firstName ?? "")
-                  form.setValue("cpf", p?.cpf ?? "")
-                  form.setValue("endereco", p?.addressNumber ?? "")
-                  form.setValue("contato", p?.phone ?? "")
+                  setSelectedPatientId(v);
+                  const p = patients.find((p) => p.id === v);
+                  form.setValue("nome", p?.firstName ?? "");
+                  form.setValue("cpf", p?.cpf ?? "");
+                  form.setValue("endereco", p?.addressNumber ?? "");
+                  form.setValue("contato", p?.phone ?? "");
                 }}
               >
                 <SelectTrigger className="w-full">
@@ -329,9 +357,11 @@ export default function AgendamentoDialog() {
 
                 <SelectContent>
                   {patients.length === 0 ? (
-                    <SelectItem value="empty" disabled>Nenhum cliente com agendamento</SelectItem>
+                    <SelectItem value="empty" disabled>
+                      Nenhum cliente com agendamento
+                    </SelectItem>
                   ) : (
-                    patients.map((p: any) => (
+                    patients.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
                         {p.firstName} {p.lastName ?? ""} - {p.phone ?? p.cpf}
                       </SelectItem>
@@ -342,16 +372,13 @@ export default function AgendamentoDialog() {
             </>
           )}
 
-
-          
-
           <Select
             value={categoria}
             onValueChange={(v) => {
-              setCategoria(v)
-              setEspecialistaId("")
-              form.setValue("categoria", v)
-              form.setValue("servico", "")
+              setCategoria(v);
+              setEspecialistaId("");
+              form.setValue("categoria", v);
+              form.setValue("servico", "");
             }}
           >
             <SelectTrigger className="w-full">
@@ -359,17 +386,15 @@ export default function AgendamentoDialog() {
             </SelectTrigger>
 
             <SelectContent>
-
               {isLoading && (
                 <SelectItem value="loading">Carregando...</SelectItem>
               )}
-              {!isLoading && categorias?.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-
-
+              {!isLoading &&
+                categorias?.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
           {error.categoria && (
@@ -378,12 +403,12 @@ export default function AgendamentoDialog() {
             </span>
           )}
 
-          {categoria &&
+          {categoria && (
             <Select
               value={especialistaId}
               onValueChange={(v) => {
-                setEspecialistaId(v)
-                form.setValue("especialista", v)
+                setEspecialistaId(v);
+                form.setValue("especialista", v);
               }}
               disabled={!categoria}
             >
@@ -399,52 +424,51 @@ export default function AgendamentoDialog() {
                 ))}
               </SelectContent>
             </Select>
-          }
+          )}
 
-          {especialistaId &&
+          {especialistaId && (
             <>
               <Input type="date" {...form.register("date")} />
               {error.date && (
                 <span className="text-alert text-xs">{error.date.message}</span>
               )}
-            </>}
+            </>
+          )}
 
-          {especialistaId && selectedDate && <>
-            <Select
-              value={form.watch("hora")}
-              onValueChange={(v) => form.setValue("hora", v)}
-              disabled={!availableTimes.length}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Horário disponível" />
-              </SelectTrigger>
+          {especialistaId && selectedDate && (
+            <>
+              <Select
+                value={selectedTime}
+                onValueChange={(v) => form.setValue("hora", v)}
+                disabled={!availableTimes.length}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Horário disponível" />
+                </SelectTrigger>
 
-              <SelectContent>
-                {availableTimes.length === 0 ? (
-                  <SelectItem value="empty" disabled>
-                    Nenhum horário disponível
-                  </SelectItem>
-                ) : (
-                  availableTimes.map((time) => (
-                    <SelectItem key={time} value={time}>
-                      {time}
+                <SelectContent>
+                  {availableTimes.length === 0 ? (
+                    <SelectItem value="empty" disabled>
+                      Nenhum horário disponível
                     </SelectItem>
-                  ))
-                )}
-
-              </SelectContent>
-            </Select>
-            {error.hora && (
-              <span className="text-alert text-xs">{error.hora.message}</span>
-            )}
-          </>
-          }
+                  ) : (
+                    availableTimes.map((time) => (
+                      <SelectItem key={time} value={time}>
+                        {time}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+              {error.hora && (
+                <span className="text-alert text-xs">{error.hora.message}</span>
+              )}
+            </>
+          )}
 
           <Input placeholder="Serviço" {...form.register("servico")} />
           {error.servico && (
-            <span className="text-alert text-xs">
-              {error.servico.message}
-            </span>
+            <span className="text-alert text-xs">{error.servico.message}</span>
           )}
 
           <DialogFooter>
@@ -455,5 +479,5 @@ export default function AgendamentoDialog() {
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

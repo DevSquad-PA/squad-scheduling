@@ -71,84 +71,81 @@ export default function SideBarAdmin({ children, user }: Props) {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const { executeAsync: executeUploadAvatar } = useAction(uploadAvatar);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-const [selectedFile, setSelectedFile] = useState<File | null>(null);
-const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  
   function handleClick() {
     if (isUploading) return;
     inputRef.current?.click();
   }
 
-function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-  const file = e.target.files?.[0];
-  if (!file) return;
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const previewUrl = URL.createObjectURL(file);
+    const previewUrl = URL.createObjectURL(file);
 
-  setSelectedFile(file);
-  setPreviewImage(previewUrl);
-  setIsDialogOpen(true);
+    setSelectedFile(file);
+    setPreviewImage(previewUrl);
+    setIsDialogOpen(true);
 
-  e.target.value = "";
-}
+    e.target.value = "";
+  }
 
-async function handleConfirmUpload() {
-  if (!selectedFile) return;
+  async function handleConfirmUpload() {
+    if (!selectedFile) return;
 
-  const previousImage = image;
-  setIsUploading(true);
+    const previousImage = image;
+    setIsUploading(true);
 
-  try {
-    setImage(previewImage);
+    try {
+      setImage(previewImage);
 
-    const result = await executeUploadAvatar({
-      avatar: selectedFile,
-    });
+      const result = await executeUploadAvatar({
+        avatar: selectedFile,
+      });
 
-    const imageUrl = result?.data?.imageUrl;
+      const imageUrl = result?.data?.imageUrl;
 
-    if (!imageUrl) {
-      const avatarErrors = result?.validationErrors?.avatar?._errors;
-      const formErrors = result?.validationErrors?._errors;
+      if (!imageUrl) {
+        const avatarErrors = result?.validationErrors?.avatar?._errors;
+        const formErrors = result?.validationErrors?._errors;
 
-      throw new Error(
-        avatarErrors?.[0] ??
-          formErrors?.[0] ??
-          result?.serverError ??
-          "Erro ao atualizar avatar."
+        throw new Error(
+          avatarErrors?.[0] ??
+            formErrors?.[0] ??
+            result?.serverError ??
+            "Erro ao atualizar avatar.",
+        );
+      }
+
+      setImage(imageUrl);
+      toast.success("Avatar atualizado.");
+      setIsDialogOpen(false);
+      router.refresh();
+    } catch (error) {
+      setImage(previousImage);
+      toast.error(
+        error instanceof Error ? error.message : "Erro ao atualizar avatar.",
       );
+    } finally {
+      if (previewImage) URL.revokeObjectURL(previewImage);
+
+      setSelectedFile(null);
+      setPreviewImage(null);
+      setIsUploading(false);
+    }
+  }
+
+  function handleDialogChange(open: boolean) {
+    if (!open && previewImage) {
+      URL.revokeObjectURL(previewImage);
+      setPreviewImage(null);
+      setSelectedFile(null);
     }
 
-    setImage(imageUrl);
-    toast.success("Avatar atualizado.");
-    setIsDialogOpen(false);
-    router.refresh();
-  } catch (error) {
-    setImage(previousImage);
-    toast.error(
-      error instanceof Error ? error.message : "Erro ao atualizar avatar."
-    );
-  } finally {
-    if (previewImage) URL.revokeObjectURL(previewImage);
-
-    setSelectedFile(null);
-    setPreviewImage(null);
-    setIsUploading(false);
+    setIsDialogOpen(open);
   }
-}
-
-
-function handleDialogChange(open: boolean) {
-  if (!open && previewImage) {
-    URL.revokeObjectURL(previewImage);
-    setPreviewImage(null);
-    setSelectedFile(null);
-  }
-
-  setIsDialogOpen(open);
-}
-
 
   async function handleSignOut() {
     setIsSigningOut(true);
@@ -267,11 +264,7 @@ function handleDialogChange(open: boolean) {
             className="hover:text-primary flex cursor-pointer items-center gap-4 text-xl font-bold disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSigningOut ? "Saindo..." : "Sair"}
-            {isSigningOut ? (
-              <Loader2 className="animate-spin" />
-            ) : (
-              <LogOut />
-            )}
+            {isSigningOut ? <Loader2 className="animate-spin" /> : <LogOut />}
           </button>
         </div>
         <hr />
@@ -279,12 +272,12 @@ function handleDialogChange(open: boolean) {
         {children}
       </SidebarInset>
       <UploadPhotoDialog
-  open={isDialogOpen}
-  onOpenChange={handleDialogChange}
-  preview={previewImage}
-  isUploading={isUploading}
-  onConfirm={handleConfirmUpload}
-/>
+        open={isDialogOpen}
+        onOpenChange={handleDialogChange}
+        preview={previewImage}
+        isUploading={isUploading}
+        onConfirm={handleConfirmUpload}
+      />
     </SidebarProvider>
   );
 }
