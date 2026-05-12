@@ -1,9 +1,10 @@
 "use server";
 
+import { endOfDay, format, startOfDay } from "date-fns";
 import { z } from "zod";
+
 import { actionClient } from "@/lib/action-client";
 import { prisma } from "@/lib/prisma";
-import { endOfDay, format, startOfDay } from "date-fns";
 
 const inputSchema = z.object({
   professionalId: z.string().uuid(),

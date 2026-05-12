@@ -1,7 +1,9 @@
+import { headers } from "next/headers";
+
+import { getProfessionalsByClinic } from "@/data/professional";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getProfessionalsByClinic } from "@/data/professional";
-import { headers } from "next/headers";
+
 import ProfessionalsList from "./_components/ProfessionalsList";
 
 export default async function ProfessionalsPage() {

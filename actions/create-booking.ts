@@ -1,10 +1,11 @@
 "use server";
 
-import { z } from "zod";
-import { protectedActionClient } from "@/lib/action-client";
-import { returnValidationErrors } from "next-safe-action";
-import { prisma } from "@/lib/prisma";
 import { isPast } from "date-fns";
+import { returnValidationErrors } from "next-safe-action";
+import { z } from "zod";
+
+import { protectedActionClient } from "@/lib/action-client";
+import { prisma } from "@/lib/prisma";
 
 const newPatientSchema = z.object({
   name: z.string().min(3, "Nome obrigatório"),

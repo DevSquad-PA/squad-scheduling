@@ -1,11 +1,12 @@
 "use server";
 
-import { z } from "zod";
-import { actionClient } from "@/lib/action-client";
-import { returnValidationErrors } from "next-safe-action";
-import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { returnValidationErrors } from "next-safe-action";
+import { z } from "zod";
+
+import { actionClient } from "@/lib/action-client";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 const validateCPF = (cpf: string): boolean => {
   const cleanCPF = cpf.replace(/\D/g, "");

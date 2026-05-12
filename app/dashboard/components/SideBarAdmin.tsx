@@ -15,8 +15,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useRef, useState } from "react";
-import UploadPhotoDialog from "@/app/dashboard/components/UploadPhotoDialog";
+
 import { uploadAvatar } from "@/actions/upload-avatar";
+import UploadPhotoDialog from "@/app/dashboard/components/UploadPhotoDialog";
 import {
   Sidebar,
   SidebarContent,

@@ -1,10 +1,11 @@
 "use server";
 
-import { z } from "zod";
-import { actionClient } from "@/lib/action-client";
-import { returnValidationErrors } from "next-safe-action";
-import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { returnValidationErrors } from "next-safe-action";
+import { z } from "zod";
+
+import { actionClient } from "@/lib/action-client";
+import { auth } from "@/lib/auth";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),

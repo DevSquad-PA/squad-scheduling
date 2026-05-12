@@ -1,8 +1,8 @@
-import * as React from "react"
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
+import * as React from "react"
+import { ButtonHTMLAttributes } from "react"
 
 import { cn } from "@/lib/utils"
-import { ButtonHTMLAttributes } from "react"
 
 const Pagination = ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => (
   <nav

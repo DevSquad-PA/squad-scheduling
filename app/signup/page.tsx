@@ -1,21 +1,20 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAction } from "next-safe-action/hooks";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import z from "zod";
+
+import { register } from "@/actions/auth/register";
 import { PhoneInput } from "@/app/dashboard/components/PhoneInput";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState } from "react";
-
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useAction } from "next-safe-action/hooks";
-import { register } from "@/actions/auth/register";
-import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
-
-import z from "zod";
-import { Eye, EyeOff } from "lucide-react";
 
 const formSchema = z
   .object({

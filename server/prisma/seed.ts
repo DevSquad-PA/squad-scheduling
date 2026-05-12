@@ -1,6 +1,7 @@
-import { randomUUID } from "crypto";
-import { PrismaClient } from "../../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { randomUUID } from "crypto";
+
+import { PrismaClient } from "../../generated/prisma/client";
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
@@ -11,7 +12,7 @@ async function seedDatabase() {
      console.log("Iniciando seed de dados de desenvolvimento...");
 
     const userEmail = "dev@squadscheduling.local";
-    const password = "Admin@123";
+    // const password = "Admin@123";
     // =====================================================
     // ADMIN
     // =====================================================

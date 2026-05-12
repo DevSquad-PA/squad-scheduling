@@ -1,10 +1,12 @@
 "use client";
 
+import { ChevronLeft, ChevronRight,Search } from "lucide-react";
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
-import AgendamentoDialog from "./components/AgendamentoDialog";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+
+import AgendamentoDialog from "./components/AgendamentoDialog";
 
 type propsappointment = {
   nome: string;
