@@ -64,7 +64,8 @@ export default async function DashboardPage() {
       contato: a.patient?.phone ?? "Sem contato",
       cpf: a.patient?.cpf ?? "Sem CPF",
       email: a.patient?.email ?? "Sem email",
-    }));
+      };
+    });
 
     return <DashboardClient initial={mapped} />;
   } catch (err) {
