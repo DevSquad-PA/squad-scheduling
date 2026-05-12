@@ -88,7 +88,7 @@ function formatTelefone(value: string) {
     .replace(/(\d{5})(\d)/, "$1-$2");
 }
 
-export default function AgendamentoDialog() {
+export default function AppointmentsDialog() {
   const [categoria, setCategoria] = useState("");
   const [isNewClient, setIsNewClient] = useState(true);
   const [selectedPatientId, setSelectedPatientId] = useState<

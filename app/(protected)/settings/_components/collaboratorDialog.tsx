@@ -40,7 +40,7 @@ function formatTelefone(value: string) {
     .replace(/(\d{5})(\d)/, "$1-$2");
 }
 
-export default function ColaboradorDialog() {
+export default function CollaboratorDialog() {
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {

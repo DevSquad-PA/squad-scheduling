@@ -3,7 +3,7 @@
 import { Search, UserPen } from "lucide-react";
 import { useState } from "react";
 
-import ColaboradorDialog from "@/app/(protected)/appointments/components/ColaboradorDialog";
+import CollaboratorDialog from "@/app/(protected)/settings/_components/collaboratorDialog";
 import { Input } from "@/components/ui/input";
 import type { Colaboradores } from "@/types/collaborators/collaborator";
 
@@ -33,7 +33,7 @@ export default function Settings() {
     <div className="flex flex-col gap-4 p-8">
       <h2 className="mb-2 text-base font-bold">Configurações</h2>
       <div className="flex items-center gap-4">
-        <ColaboradorDialog />
+        <CollaboratorDialog />
 
         <div className="relative w-fit">
           <Input

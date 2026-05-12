@@ -10,11 +10,11 @@ import { useForm } from "react-hook-form";
 import z from "zod";
 
 import { register } from "@/actions/auth/register";
-import { PhoneInput } from "@/app/(protected)/appointments/components/PhoneInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
+import { formatPhone } from "@/lib/utils";
 
 const formSchema = z
   .object({
@@ -176,8 +176,17 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <PhoneInput
-                {...form.register("phone")}
+              <Input
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                maxLength={15}
+                placeholder="(11) 98765-4321"
+                {...form.register("phone", {
+                  onChange: (e) => {
+                    e.target.value = formatPhone(e.target.value);
+                  },
+                })}
                 className="placeholder:text-primary text-text"
               />
               {form.formState.errors.phone && (

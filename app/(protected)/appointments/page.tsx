@@ -4,7 +4,7 @@ import { getDashboardAppointmentsByClinic } from "@/data/appointments";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-import AppointmentsClient from "./AppointmentsClient";
+import AppointmentsClient from "./components/AppointmentsClient";
 
 export default async function AppointmentsPage() {
   const session = await auth.api.getSession({

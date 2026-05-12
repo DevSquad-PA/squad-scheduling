@@ -17,7 +17,7 @@ import { useAction } from "next-safe-action/hooks";
 import { useRef, useState } from "react";
 
 import { uploadAvatar } from "@/actions/upload-avatar";
-import UploadPhotoDialog from "@/app/(protected)/appointments/components/UploadPhotoDialog";
+import UploadPhotoDialog from "@/app/(protected)/_components/UploadPhotoDialog";
 import {
   Sidebar,
   SidebarContent,

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
 
-import SideBarAdmin from "./appointments/components/SideBarAdmin";
+import SideBarAdmin from "./_components/SideBarAdmin";
 
 export default async function Layout({
   children,

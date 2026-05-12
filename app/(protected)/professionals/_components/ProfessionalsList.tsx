@@ -3,7 +3,6 @@
 import { Search } from "lucide-react";
 import { useState } from "react";
 
-import { PhoneInput } from "@/app/(protected)/appointments/components/PhoneInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -23,6 +22,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { formatPhone } from "@/lib/utils";
 import type {
   CreateProfessionalInput,
   Professional,
@@ -122,9 +122,14 @@ export default function ProfessionalsList({
         </label>
         <label className="flex flex-col gap-1">
           <span className="text-sm">Telefone</span>
-          <PhoneInput
+          <Input
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            maxLength={15}
+            placeholder="(11) 98765-4321"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => setPhone(formatPhone(e.target.value))}
           />
         </label>
         <label className="flex flex-col gap-1">

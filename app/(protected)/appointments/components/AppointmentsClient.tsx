@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { PropsAppointment } from "@/types/appointment/appointments";
 
-import AgendamentoDialog from "./components/AgendamentoDialog";
+import AppointmentsDialog from "./AppointmentsDialog";
 
 export default function AppointmentsClient({
   initial,
@@ -68,7 +68,7 @@ export default function AppointmentsClient({
       <h2 className="mb-2 text-base font-bold">Agendamentos</h2>
 
       <div className="flex items-center gap-4">
-        <AgendamentoDialog />
+        <AppointmentsDialog />
 
         <div className="relative w-fit">
           <Input
