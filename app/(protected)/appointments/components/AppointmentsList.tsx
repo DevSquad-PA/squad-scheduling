@@ -41,7 +41,7 @@ export default function AppointmentsList({
     parsedSelectedDate,
   );
 
- 
+
 
   return (
     <>
@@ -52,36 +52,31 @@ export default function AppointmentsList({
           >
             <CardHeader>
               <div className="flex justify-end gap-2">
+                <EditAppointment
+                  appointment={{
+                    id: appointment.cliente,
+                    data: appointment.data,
+                    hora: appointment.hora,
+                  }}
+                />
 
-                 <EditAppointment
-    appointment={{
-      id: appointment.cliente,
-      data: appointment.data,
-      hora: appointment.hora,
-    }}
-  />
-
-  <DeleteAppointment
-    appointmentId={appointment.cliente}
-  />
-                {/* <button>
-              <Pencil className="h-5 w-5"/></button>
-              <Trash className="h-5 w-5 hover:text-red-500"/>
-               */}
-
-               </div>
+                <DeleteAppointment
+                  appointmentId={appointment.cliente}
+                />
+              </div>
+              
               <CardTitle>{appointment.nome ?? "—"}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-1 text-sm">
               <p>
                 <strong>Servico:</strong> {appointment.descricao ?? "—"}
               </p>
-              
+
               <p className="flex items-center gap-2">
-                <strong>Hora:</strong> 
+                <strong>Hora:</strong>
                 {appointment.hora ?? "N/A"}
               </p>
-              
+
               <p>
                 <strong>Cliente:</strong> {appointment.cliente ?? "N/A"}
               </p>
