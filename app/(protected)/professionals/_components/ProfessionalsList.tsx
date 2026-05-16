@@ -28,6 +28,8 @@ import type {
   Professional,
 } from "@/types/professionals/professional";
 
+import Link from "next/link";
+
 export default function ProfessionalsList({
   initial,
 }: {
@@ -202,17 +204,20 @@ export default function ProfessionalsList({
           </p>
         )}
         {paginatedProfessionals.map((p) => (
-          <Card key={p.id}>
-            <CardHeader>
-              <CardTitle>{p.user?.name ?? "—"}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-1 text-sm">
-              <p>Email: {p.user?.email ?? "—"}</p>
-              <p>Telefone: {p.user?.phone ?? "N/A"}</p>
-              <p>Especialidade: {p.specialty ?? "N/A"}</p>
-              <p>Serviços: {p.services?.join(", ") || "N/A"}</p>
-            </CardContent>
-          </Card>
+          <Link key={p.id} href={`/professionals/profile/${p.id}`}>
+            <Card>
+              <CardHeader>
+                <CardTitle>{p.user?.name ?? "—"}</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-1 text-sm">
+                <p>Email: {p.user?.email ?? "—"}</p>
+                <p>Telefone: {p.user?.phone ?? "N/A"}</p>
+                <p>Especialidade: {p.specialty ?? "N/A"}</p>
+                <p>Serviços: {p.services?.join(", ") || "N/A"}</p>
+              </CardContent>
+            </Card>
+          </Link>
+          
         ))}
       </div>
 
