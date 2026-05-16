@@ -6,6 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDashboardAppointmentsByCurrentUser } from "@/data/appointments";
 import { filterAppointments, parseInputDate } from "@/lib/utils";
 import type { PropsAppointment } from "@/types/appointment/appointments";
+import EditAppointment from "./EditAppointments";
+import DeleteAppointment from "./DeleteAppointments";
+
 
 type AppointmentsListProps = {
   clinicId: string;
@@ -38,6 +41,8 @@ export default function AppointmentsList({
     parsedSelectedDate,
   );
 
+
+
   return (
     <>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -46,15 +51,32 @@ export default function AppointmentsList({
             key={`${appointment.data}-${appointment.hora}-${appointment.cpf}-${index}`}
           >
             <CardHeader>
+              <div className="flex justify-end gap-2">
+                <EditAppointment
+                  appointment={{
+                    id: appointment.cliente,
+                    data: appointment.data,
+                    hora: appointment.hora,
+                  }}
+                />
+
+                <DeleteAppointment
+                  appointmentId={appointment.cliente}
+                />
+              </div>
+              
               <CardTitle>{appointment.nome ?? "—"}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-1 text-sm">
               <p>
                 <strong>Servico:</strong> {appointment.descricao ?? "—"}
               </p>
-              <p>
-                <strong>Hora:</strong> {appointment.hora ?? "N/A"}
+
+              <p className="flex items-center gap-2">
+                <strong>Hora:</strong>
+                {appointment.hora ?? "N/A"}
               </p>
+
               <p>
                 <strong>Cliente:</strong> {appointment.cliente ?? "N/A"}
               </p>
