@@ -14,6 +14,7 @@ export interface Appointment {
 }
 
 export type PropsAppointment = {
+  id: string;
   nome: string;
   data: string;
   hora: string;

@@ -55,14 +55,14 @@ export default function AppointmentsList({
               <div className="flex gap-2">
                 <EditAppointment
                   appointment={{
-                    id: appointment.cliente,
+                    id: appointment.id,
                     data: appointment.data,
                     hora: appointment.hora,
                   }}
                 />
 
                 <DeleteAppointment
-                  appointmentId={appointment.cliente}
+                  appointmentId={appointment.id}
                 />
               </div>
             </CardHeader>

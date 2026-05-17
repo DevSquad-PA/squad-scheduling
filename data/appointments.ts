@@ -35,6 +35,7 @@ export const getDashboardAppointmentsByClinic = async (
     const patientName = [appointment.patient?.firstName, appointment.patient?.lastName].filter(Boolean).join(" ") || "Sem nome";
 
     return {
+      id: appointment.id,
       nome: professionalName,
       data: new Date(appointment.date).toLocaleDateString("pt-BR", {
         timeZone: "UTC",
