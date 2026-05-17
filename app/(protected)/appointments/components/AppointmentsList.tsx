@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDashboardAppointmentsByCurrentUser } from "@/data/appointments";
 import { filterAppointments, parseInputDate } from "@/lib/utils";
 import type { PropsAppointment } from "@/types/appointment/appointments";
-import EditAppointment from "./EditAppointments";
+
 import DeleteAppointment from "./DeleteAppointments";
+import EditAppointment from "./EditAppointments";
 
 
 type AppointmentsListProps = {

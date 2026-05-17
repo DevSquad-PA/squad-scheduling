@@ -1,6 +1,7 @@
 "use client";
 
 import { Search } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -27,8 +28,6 @@ import type {
   CreateProfessionalInput,
   Professional,
 } from "@/types/professionals/professional";
-
-import Link from "next/link";
 
 export default function ProfessionalsList({
   initial,
