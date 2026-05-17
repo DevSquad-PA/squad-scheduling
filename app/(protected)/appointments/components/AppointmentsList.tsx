@@ -50,8 +50,9 @@ export default function AppointmentsList({
           <Card
             key={`${appointment.data}-${appointment.hora}-${appointment.cpf}-${index}`}
           >
-            <CardHeader>
-              <div className="flex justify-end gap-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-base font-semibold">{appointment.nome ?? "—"}</CardTitle>
+              <div className="flex gap-2">
                 <EditAppointment
                   appointment={{
                     id: appointment.cliente,
@@ -64,8 +65,6 @@ export default function AppointmentsList({
                   appointmentId={appointment.cliente}
                 />
               </div>
-              
-              <CardTitle>{appointment.nome ?? "—"}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-1 text-sm">
               <p>
