@@ -29,10 +29,17 @@ export const cancelAppointment = protectedActionClient
       });
     }
 
-    const dateTime = new Date(appointment.date);
-    dateTime.setHours(
-      appointment.time.getHours(),
-      appointment.time.getMinutes(),
+    // Usamos os métodos UTC para evitar que o fuso horário (ex: UTC-3 do Brasil)
+    // desloque a data do agendamento para o dia anterior e altere as horas locais.
+    const dateObj = new Date(appointment.date);
+    const timeObj = new Date(appointment.time);
+
+    const dateTime = new Date(
+      dateObj.getUTCFullYear(),
+      dateObj.getUTCMonth(),
+      dateObj.getUTCDate(),
+      timeObj.getUTCHours(),
+      timeObj.getUTCMinutes(),
       0,
       0
     );
