@@ -56,7 +56,7 @@ export default function AppointmentsFilters({
 
   return (
     <div className="flex flex-col items-start gap-4">
-      <div className="relative w-fit">
+      <div className="relative w-fit items-center">
         <Input
           placeholder="Pesquisar"
           className="w-80 pr-10"

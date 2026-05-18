@@ -1,14 +1,15 @@
 "use client";
 
 import { Search } from "lucide-react";
-import Link from "next/link";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 
+import { createProfessional as createProfessionalAction } from "@/actions/professionalActions/create-professional";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -28,6 +29,7 @@ import type {
   CreateProfessionalInput,
   Professional,
 } from "@/types/professionals/professional";
+import Link from "next/link";
 
 export default function ProfessionalsList({
   initial,
@@ -42,21 +44,47 @@ export default function ProfessionalsList({
   const [open, setOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [isPending, startTransition] = useTransition();
+
   async function createProfessional(payload: CreateProfessionalInput) {
-    try {
-      const res = await fetch("/api/professionals", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error("create failed");
-      const created = await res.json();
-      setProfessionals((prev) => [created, ...prev]);
-      setOpen(false);
-    } catch (e) {
-      console.error(e);
-      alert("Erro ao criar profissional");
-    }
+    startTransition(async () => {
+      const res = await createProfessionalAction(payload);
+      if (res?.validationErrors) {
+        console.error("Erros de validação ao criar profissional:", res.validationErrors);
+        const errors: string[] = [];
+        if (res.validationErrors._errors) {
+          errors.push(...res.validationErrors._errors);
+        }
+        Object.entries(res.validationErrors).forEach(([key, val]) => {
+          if (key !== "_errors") {
+            if (Array.isArray(val)) {
+              val.forEach((item) => {
+                if (typeof item === "string") errors.push(item);
+              });
+            } else if (val && typeof val === "object" && "_errors" in val) {
+              const fieldErrors = (val as any)._errors;
+              if (Array.isArray(fieldErrors)) {
+                fieldErrors.forEach((item) => {
+                  if (typeof item === "string") errors.push(item);
+                });
+              }
+            }
+          }
+        });
+        const errorMsg = errors.length > 0 ? errors[0] : "Erro de validação ao criar profissional.";
+        alert(errorMsg);
+        return;
+      }
+      if (res?.serverError) {
+        console.error("Erro interno do servidor ao criar profissional:", res.serverError);
+        alert(res.serverError);
+        return;
+      }
+      if (res?.data) {
+        setProfessionals((prev) => [res.data as Professional, ...prev]);
+        setOpen(false);
+      }
+    });
   }
 
   const filtered = professionals.filter((p) => {
@@ -170,6 +198,9 @@ export default function ProfessionalsList({
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Cadastro de profissional</DialogTitle>
+                <DialogDescription className="sr-only">
+                  Formulário para cadastrar um novo profissional na clínica.
+                </DialogDescription>
               </DialogHeader>
               <ProfessionalsForm
                 onSubmit={createProfessional}
@@ -216,7 +247,6 @@ export default function ProfessionalsList({
               </CardContent>
             </Card>
           </Link>
-          
         ))}
       </div>
 
