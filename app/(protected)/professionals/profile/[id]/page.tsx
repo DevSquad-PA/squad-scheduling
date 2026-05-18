@@ -4,10 +4,10 @@ import Link from "next/link";
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const professional  = await prisma.professional.findUnique({
+    const professional = await prisma.professional.findUnique({
         where: { id },
         include: { user: true },
-  })
+    })
 
     return (
         <div className="flex flex-col gap-5 p-5 text-primary">

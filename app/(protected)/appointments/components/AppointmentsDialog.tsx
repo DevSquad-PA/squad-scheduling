@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import z from "zod";
 
-import { createAppointment } from "@/actions/create-booking";
+import { createAppointment } from "@/actions/bookingActions/create-booking";
 import { getAvailableTime } from "@/actions/get-date-available-time";
 import { getPatientsWithBookings } from "@/actions/get-patients-with-bookings";
 import { Button } from "@/components/ui/button";
