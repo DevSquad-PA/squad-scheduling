@@ -281,7 +281,9 @@ export default function ProfessionalsList({
         <div className="w-fit">
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button variant="themegreen">Cadastrar profissional</Button>
+              <Button variant="themegreen" disabled={createPending} aria-busy={createPending}>
+                {createPending ? "Cadastrando..." : "Cadastrar profissional"}
+              </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>

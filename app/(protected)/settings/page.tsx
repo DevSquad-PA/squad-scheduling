@@ -29,11 +29,13 @@ export default function Settings() {
     },
   ];
 
+  const [collaborators, setCollaborators] = useState<Colaboradores[]>(exemplo);
+
   return (
     <div className="flex flex-col gap-4 p-8">
       <h2 className="mb-2 text-base font-bold">Configurações</h2>
       <div className="flex items-center gap-4">
-        <CollaboratorDialog />
+        <CollaboratorDialog onCreate={(c) => setCollaborators((s) => [c, ...s])} />
 
         <div className="relative w-fit">
           <Input
@@ -46,11 +48,11 @@ export default function Settings() {
         </div>
       </div>
 
-      {exemplo.length === 0 && (
+      {collaborators.length === 0 && (
         <p className="text-sm text-gray-500">Nenhum agendamento</p>
       )}
 
-      {exemplo.map((e, i) => (
+      {collaborators.map((e, i) => (
         <div
           key={i}
           className="grid w-full grid-cols-[1fr_1fr_1fr_1fr_1fr_auto] items-center gap-x-6 gap-y-1 py-2"

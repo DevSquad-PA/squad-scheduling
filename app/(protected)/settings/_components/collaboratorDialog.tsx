@@ -14,6 +14,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { useToast } from "@/components/ui/toast";
 import {
   Select,
   SelectContent,
@@ -21,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { Colaboradores } from "@/types/collaborators/collaborator";
 
 const formSchema = z.object({
   nome: z.string().min(3, "Nome obrigatório"),
@@ -40,7 +43,11 @@ function formatTelefone(value: string) {
     .replace(/(\d{5})(\d)/, "$1-$2");
 }
 
-export default function CollaboratorDialog() {
+export default function CollaboratorDialog({ onCreate }: { onCreate?: (c: Colaboradores) => void }) {
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const [createPending, setCreatePending] = useState(false);
+
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -60,8 +67,21 @@ export default function CollaboratorDialog() {
 
   const error = form.formState.errors;
 
-  const onSubmit = (data: FormSchema) => {
-    console.log(data);
+  const onSubmit = async (data: FormSchema) => {
+    setCreatePending(true);
+    try {
+      // TODO: replace with real create action
+      console.log("Criando colaborador:", data);
+      toast.success("Colaborador criado");
+      form.reset();
+      setOpen(false);
+      if (onCreate) onCreate(data as Colaboradores);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.message || "Erro ao criar colaborador");
+    } finally {
+      setCreatePending(false);
+    }
   };
 
   const tipos = [
@@ -70,10 +90,10 @@ export default function CollaboratorDialog() {
   ];
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="themegreen" className="w-fit">
-          + Colaborador
+        <Button variant="themegreen" className="w-fit" disabled={createPending} aria-busy={createPending}>
+          {createPending ? "Cadastrando..." : "+ Colaborador"}
         </Button>
       </DialogTrigger>
 
@@ -145,8 +165,8 @@ export default function CollaboratorDialog() {
           )}
 
           <DialogFooter>
-            <Button type="submit" variant="themegreen">
-              Salvar
+            <Button type="submit" variant="themegreen" disabled={createPending} aria-busy={createPending}>
+              {createPending ? "Salvando..." : "Salvar"}
             </Button>
           </DialogFooter>
         </form>
