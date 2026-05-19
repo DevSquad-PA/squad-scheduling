@@ -14,7 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/toast";
 import {
   Select,
@@ -43,10 +43,21 @@ function formatTelefone(value: string) {
     .replace(/(\d{5})(\d)/, "$1-$2");
 }
 
-export default function CollaboratorDialog({ onCreate }: { onCreate?: (c: Colaboradores) => void }) {
+export default function CollaboratorDialog({
+  onCreate,
+  onUpdate,
+  initial,
+  trigger,
+}: {
+  onCreate?: (c: Colaboradores) => void;
+  onUpdate?: (c: Colaboradores) => void;
+  initial?: Colaboradores | null;
+  trigger?: React.ReactNode;
+}) {
   const toast = useToast();
   const [open, setOpen] = useState(false);
-  const [createPending, setCreatePending] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const isEdit = Boolean(initial);
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -60,6 +71,13 @@ export default function CollaboratorDialog({ onCreate }: { onCreate?: (c: Colabo
     },
   });
 
+  useEffect(() => {
+    if (initial) {
+      form.reset(initial as FormSchema);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initial]);
+
   const contato = useWatch({
     control: form.control,
     name: "contato",
@@ -68,19 +86,26 @@ export default function CollaboratorDialog({ onCreate }: { onCreate?: (c: Colabo
   const error = form.formState.errors;
 
   const onSubmit = async (data: FormSchema) => {
-    setCreatePending(true);
+    setSubmitting(true);
     try {
-      // TODO: replace with real create action
-      console.log("Criando colaborador:", data);
-      toast.success("Colaborador criado");
+      if (isEdit) {
+        // update flow
+        console.log("Atualizando colaborador:", data);
+        toast.success("Colaborador atualizado");
+        if (onUpdate) onUpdate(data as Colaboradores);
+      } else {
+        // create flow
+        console.log("Criando colaborador:", data);
+        toast.success("Colaborador criado");
+        if (onCreate) onCreate(data as Colaboradores);
+      }
       form.reset();
       setOpen(false);
-      if (onCreate) onCreate(data as Colaboradores);
     } catch (err: any) {
       console.error(err);
-      toast.error(err?.message || "Erro ao criar colaborador");
+      toast.error(err?.message || (isEdit ? "Erro ao atualizar colaborador" : "Erro ao criar colaborador"));
     } finally {
-      setCreatePending(false);
+      setSubmitting(false);
     }
   };
 
@@ -92,9 +117,11 @@ export default function CollaboratorDialog({ onCreate }: { onCreate?: (c: Colabo
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="themegreen" className="w-fit" disabled={createPending} aria-busy={createPending}>
-          {createPending ? "Cadastrando..." : "+ Colaborador"}
-        </Button>
+        {trigger ?? (
+          <Button variant="themegreen" className="w-fit" disabled={submitting} aria-busy={submitting}>
+            {submitting ? (isEdit ? "Salvando..." : "Cadastrando...") : isEdit ? "Editar" : "+ Colaborador"}
+          </Button>
+        )}
       </DialogTrigger>
 
       <DialogContent>
@@ -165,8 +192,8 @@ export default function CollaboratorDialog({ onCreate }: { onCreate?: (c: Colabo
           )}
 
           <DialogFooter>
-            <Button type="submit" variant="themegreen" disabled={createPending} aria-busy={createPending}>
-              {createPending ? "Salvando..." : "Salvar"}
+            <Button type="submit" variant="themegreen" disabled={submitting} aria-busy={submitting}>
+              {submitting ? (isEdit ? "Salvando..." : "Cadastrando...") : isEdit ? "Salvar" : "Salvar"}
             </Button>
           </DialogFooter>
         </form>

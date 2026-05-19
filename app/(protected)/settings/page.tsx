@@ -6,6 +6,7 @@ import { useState } from "react";
 import CollaboratorDialog from "@/app/(protected)/settings/_components/collaboratorDialog";
 import { Input } from "@/components/ui/input";
 import type { Colaboradores } from "@/types/collaborators/collaborator";
+import { useEffect } from "react";
 
 export default function Settings() {
   const [search, setSearch] = useState("");
@@ -30,6 +31,27 @@ export default function Settings() {
   ];
 
   const [collaborators, setCollaborators] = useState<Colaboradores[]>(exemplo);
+
+  // persist collaborators to localStorage so reload keeps them
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem("collaborators");
+      if (raw) {
+        setCollaborators(JSON.parse(raw));
+      }
+    } catch (e) {
+      /* ignore */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("collaborators", JSON.stringify(collaborators));
+    } catch (e) {
+      /* ignore */
+    }
+  }, [collaborators]);
 
   return (
     <div className="flex flex-col gap-4 p-8">
@@ -63,9 +85,15 @@ export default function Settings() {
           <p className="truncate">{e.usuario}</p>
           <p className="truncate">{e.contato}</p>
 
-          <button className="cursor-pointer">
-            <UserPen className="hover:text-primary" />
-          </button>
+          <CollaboratorDialog
+            initial={e}
+            onUpdate={(c) => setCollaborators((s) => s.map((it, ii) => (ii === i ? c : it)))}
+            trigger={
+              <button className="cursor-pointer">
+                <UserPen className="hover:text-primary" />
+              </button>
+            }
+          />
 
           <span className="bg-text2 col-span-full h-px"></span>
         </div>
