@@ -1,9 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useAction } from "next-safe-action/hooks";
+import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import z from "zod";
 
+import { createCollaborator } from "@/actions/collaboratorActions/create-collaborator";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/components/ui/toast";
 
 const formSchema = z.object({
   nome: z.string().min(3, "Nome obrigatório"),
@@ -41,6 +46,10 @@ function formatTelefone(value: string) {
 }
 
 export default function CollaboratorDialog() {
+  const [open, setOpen] = useState(false);
+  const router = useRouter();
+  const toast = useToast();
+
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -57,11 +66,42 @@ export default function CollaboratorDialog() {
     control: form.control,
     name: "contato",
   });
+  const tipo = useWatch({
+    control: form.control,
+    name: "tipo",
+  });
 
   const error = form.formState.errors;
 
+  const { execute, status } = useAction(createCollaborator, {
+    onSuccess: () => {
+      toast.success("Colaborador criado");
+      form.reset();
+      setOpen(false);
+      router.refresh();
+    },
+    onError: ({ error }) => {
+      const validationMessage = error.validationErrors?._errors?.[0];
+
+      if (validationMessage) {
+        toast.error(validationMessage);
+        return;
+      }
+
+      if (error.serverError) {
+        toast.error(String(error.serverError));
+        return;
+      }
+
+      toast.error("Erro ao criar colaborador");
+    },
+  });
+
   const onSubmit = (data: FormSchema) => {
-    console.log(data);
+    execute({
+      ...data,
+      tipo: data.tipo as "admin" | "user",
+    });
   };
 
   const tipos = [
@@ -70,7 +110,7 @@ export default function CollaboratorDialog() {
   ];
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="themegreen" className="w-fit">
           + Colaborador
@@ -123,8 +163,9 @@ export default function CollaboratorDialog() {
           )}
 
           <Select
+            value={tipo || undefined}
             onValueChange={(v) => {
-              form.setValue("tipo", v);
+              form.setValue("tipo", v, { shouldValidate: true });
             }}
           >
             <SelectTrigger>
@@ -145,8 +186,12 @@ export default function CollaboratorDialog() {
           )}
 
           <DialogFooter>
-            <Button type="submit" variant="themegreen">
-              Salvar
+            <Button
+              type="submit"
+              variant="themegreen"
+              disabled={status === "executing"}
+            >
+              {status === "executing" ? "Salvando..." : "Salvar"}
             </Button>
           </DialogFooter>
         </form>
