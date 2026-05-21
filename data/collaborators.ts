@@ -21,6 +21,6 @@ export const getCollaboratorsByClinic = async (
     usuario: member.user?.email.split("@")[0] ?? "",
     email: member.user?.email ?? "",
     contato: member.user?.phone ?? "",
-    tipo: member.role?.description ?? "Usuário",
+    tipo: member.role?.description ?? "Atendimento",
   }));
 };

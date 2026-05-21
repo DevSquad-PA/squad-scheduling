@@ -14,15 +14,10 @@ const inputSchema = z.object({
   email: z.string().email("Email inválido"),
   senha: z.string().min(6, "Senha mínima 6 caracteres"),
   contato: z.string().min(10, "Telefone inválido"),
-  tipo: z.enum(["admin", "user"], {
+  tipo: z.enum(["Administrador", "Atendimento", "Médico"], {
     message: "Selecione o tipo",
   }),
 });
-
-const roleDescriptions = {
-  admin: "Administrador",
-  user: "Usuário",
-} as const;
 
 export const createCollaborator = protectedActionClient
   .inputSchema(inputSchema)
@@ -38,15 +33,13 @@ export const createCollaborator = protectedActionClient
       });
     }
 
-    const roleDescription = roleDescriptions[parsedInput.tipo];
-
     let role = await prisma.role.findUnique({
-      where: { description: roleDescription },
+      where: { description: parsedInput.tipo },
     });
 
     if (!role) {
       role = await prisma.role.create({
-        data: { description: roleDescription },
+        data: { description: parsedInput.tipo },
       });
     }
 

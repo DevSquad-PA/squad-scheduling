@@ -100,13 +100,14 @@ export default function CollaboratorDialog() {
   const onSubmit = (data: FormSchema) => {
     execute({
       ...data,
-      tipo: data.tipo as "admin" | "user",
+      tipo: data.tipo as "Administrador" | "Atendimento" | "Médico",
     });
   };
 
   const tipos = [
-    { value: "admin", label: "Administrador" },
-    { value: "user", label: "Usuário" },
+    { value: "Administrador", label: "Administrador" },
+    { value: "Atendimento", label: "Atendimento" },
+    { value: "Médico", label: "Médico" },
   ];
 
   return (
