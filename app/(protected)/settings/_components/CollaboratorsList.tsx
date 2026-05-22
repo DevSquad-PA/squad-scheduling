@@ -1,9 +1,11 @@
 "use client";
 
-import { Search, UserPen } from "lucide-react";
+import { Search } from "lucide-react";
 import { useState } from "react";
 
 import CollaboratorDialog from "@/app/(protected)/settings/_components/collaboratorDialog";
+import DeleteCollaboratorDialog from "@/app/(protected)/settings/_components/DeleteCollaboratorDialog";
+import EditCollaboratorDialog from "@/app/(protected)/settings/_components/EditCollaboratorDialog";
 import { Input } from "@/components/ui/input";
 import { formatPhone } from "@/lib/utils";
 import type { Collaborator } from "@/types/collaborators/collaborator";
@@ -59,9 +61,10 @@ export default function CollaboratorsList({
           <p className="truncate">{collaborator.usuario}</p>
           <p className="truncate">{formatPhone(collaborator.contato)}</p>
 
-          <button className="cursor-pointer">
-            <UserPen className="hover:text-primary" />
-          </button>
+          <div className="flex items-center justify-end gap-1">
+            <EditCollaboratorDialog collaborator={collaborator} />
+            <DeleteCollaboratorDialog collaborator={collaborator} />
+          </div>
 
           <span className="bg-text2 col-span-full h-px" />
         </div>
