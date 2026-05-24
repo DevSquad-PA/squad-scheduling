@@ -5,6 +5,7 @@ import { returnValidationErrors } from "next-safe-action";
 import { z } from "zod";
 
 import { protectedActionClient } from "@/lib/action-client";
+import { getClinicAccessByUser, getPermissions } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
 const newPatientSchema = z.object({
@@ -35,7 +36,16 @@ const inputSchema = z
 
 export const createAppointment = protectedActionClient
   .inputSchema(inputSchema)
-  .action(async ({ parsedInput: { clinicId, professionalId, patientId, patient, date, time, services } }) => {
+  .action(async ({ parsedInput: { clinicId, professionalId, patientId, patient, date, time, services }, ctx }) => {
+    const access = await getClinicAccessByUser(ctx.user.id);
+    const permissions = getPermissions(access?.role);
+
+    if (!access || access.clinicId !== clinicId || !permissions.canCreate) {
+      return returnValidationErrors(inputSchema, {
+        _errors: ["Você não tem permissão para criar agendamentos."],
+      });
+    }
+
     // parsedInput.date is "YYYY-MM-DD", parsedInput.time is "HH:mm"
     const [year, month, day] = date.split("-").map(Number)
     const [hours, minutes] = time.split(":").map(Number)

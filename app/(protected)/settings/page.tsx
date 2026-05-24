@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import CollaboratorsList from "@/app/(protected)/settings/_components/CollaboratorsList";
 import { getCollaboratorsByClinic } from "@/data/collaborators";
 import { auth } from "@/lib/auth";
+import { getPermissions } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
 export default async function Settings() {
@@ -16,7 +17,7 @@ export default async function Settings() {
 
   const clinicMember = await prisma.clinicMember.findFirst({
     where: { userId: session.user.id },
-    select: { clinicId: true },
+    include: { role: true },
   });
 
   if (!clinicMember?.clinicId) {
@@ -24,6 +25,14 @@ export default async function Settings() {
   }
 
   const collaborators = await getCollaboratorsByClinic(clinicMember.clinicId);
+  const permissions = getPermissions(clinicMember.role?.description);
 
-  return <CollaboratorsList collaborators={collaborators} />;
+  return (
+    <CollaboratorsList
+      collaborators={collaborators}
+      canCreate={permissions.canCreate}
+      canUpdate={permissions.canUpdate}
+      canDelete={permissions.canDelete}
+    />
+  );
 }

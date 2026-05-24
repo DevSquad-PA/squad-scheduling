@@ -5,6 +5,7 @@ import { returnValidationErrors } from "next-safe-action";
 import { z } from "zod";
 
 import { protectedActionClient } from "@/lib/action-client";
+import { getClinicAccessByUser, getPermissions } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
 const inputSchema = z.object({
@@ -19,6 +20,14 @@ export const createProfessional = protectedActionClient
   .inputSchema(inputSchema)
   .action(async ({ parsedInput: { name, email, phone, specialty, services }, ctx }) => {
     const userId = ctx.user.id;
+    const access = await getClinicAccessByUser(userId);
+    const permissions = getPermissions(access?.role);
+
+    if (!access || !permissions.canCreate) {
+      return returnValidationErrors(inputSchema, {
+        _errors: ["Você não tem permissão para criar profissionais."],
+      });
+    }
 
     // 1. Buscar a clínica que o usuário logado faz parte
     const clinicMember = await prisma.clinicMember.findFirst({
@@ -27,8 +36,14 @@ export const createProfessional = protectedActionClient
     });
 
     if (!clinicMember?.clinicId) {
-      returnValidationErrors(inputSchema, {
+      return returnValidationErrors(inputSchema, {
         _errors: ["Nenhuma clínica encontrada para este usuário."],
+      });
+    }
+
+    if (clinicMember.clinicId !== access.clinicId) {
+      return returnValidationErrors(inputSchema, {
+        _errors: ["Clínica inválida para este usuário."],
       });
     }
 
@@ -107,7 +122,7 @@ export const createProfessional = protectedActionClient
         },
       });
     } else {
-      returnValidationErrors(inputSchema, {
+      return returnValidationErrors(inputSchema, {
         _errors: ["Profissional já está cadastrado nesta clínica."],
       });
     }

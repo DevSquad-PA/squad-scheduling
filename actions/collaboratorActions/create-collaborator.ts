@@ -6,6 +6,7 @@ import { returnValidationErrors } from "next-safe-action";
 import { z } from "zod";
 
 import { protectedActionClient } from "@/lib/action-client";
+import { getClinicAccessByUser, getPermissions } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
 const inputSchema = z.object({
@@ -22,6 +23,15 @@ const inputSchema = z.object({
 export const createCollaborator = protectedActionClient
   .inputSchema(inputSchema)
   .action(async ({ parsedInput, ctx }) => {
+    const access = await getClinicAccessByUser(ctx.user.id);
+    const permissions = getPermissions(access?.role);
+
+    if (!access || !permissions.canCreate) {
+      return returnValidationErrors(inputSchema, {
+        _errors: ["Você não tem permissão para criar colaboradores."],
+      });
+    }
+
     const clinicMember = await prisma.clinicMember.findFirst({
       where: { userId: ctx.user.id },
       select: { clinicId: true },
@@ -30,6 +40,12 @@ export const createCollaborator = protectedActionClient
     if (!clinicMember?.clinicId) {
       return returnValidationErrors(inputSchema, {
         _errors: ["Nenhuma clínica encontrada para este usuário."],
+      });
+    }
+
+    if (clinicMember.clinicId !== access.clinicId) {
+      return returnValidationErrors(inputSchema, {
+        _errors: ["Clínica inválida para este usuário."],
       });
     }
 

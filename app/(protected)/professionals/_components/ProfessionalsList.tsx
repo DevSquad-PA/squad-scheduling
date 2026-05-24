@@ -1,6 +1,7 @@
 "use client";
 
 import { Search } from "lucide-react";
+import Link from "next/link";
 import { useState, useTransition } from "react";
 
 import { createProfessional as createProfessionalAction } from "@/actions/professionalActions/create-professional";
@@ -29,12 +30,13 @@ import type {
   CreateProfessionalInput,
   Professional,
 } from "@/types/professionals/professional";
-import Link from "next/link";
 
 export default function ProfessionalsList({
   initial,
+  canCreate,
 }: {
   initial: Professional[];
+  canCreate: boolean;
 }) {
   const ITEMS_PER_PAGE = 16;
   const COLUMNS = 4;
@@ -62,7 +64,7 @@ export default function ProfessionalsList({
                 if (typeof item === "string") errors.push(item);
               });
             } else if (val && typeof val === "object" && "_errors" in val) {
-              const fieldErrors = (val as any)._errors;
+              const fieldErrors = (val as { _errors?: unknown })._errors;
               if (Array.isArray(fieldErrors)) {
                 fieldErrors.forEach((item) => {
                   if (typeof item === "string") errors.push(item);
@@ -179,7 +181,9 @@ export default function ProfessionalsList({
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancelar
           </Button>
-          <Button type="submit">Salvar</Button>
+          <Button type="submit" disabled={isPending}>
+            Salvar
+          </Button>
         </div>
       </form>
     );
@@ -190,10 +194,13 @@ export default function ProfessionalsList({
       <h2 className="mb-2 text-base font-bold">Profissionais</h2>
 
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        {canCreate && (
         <div className="w-fit">
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button variant="themegreen">Cadastrar profissional</Button>
+              <Button variant="themegreen" disabled={isPending}>
+                Cadastrar profissional
+              </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -210,6 +217,7 @@ export default function ProfessionalsList({
             </DialogContent>
           </Dialog>
         </div>
+        )}
 
         <div className="relative w-full max-w-xs md:w-fit">
           <Input

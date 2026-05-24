@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 
 import { getDashboardAppointmentsByClinic } from "@/data/appointments";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getClinicAccessByUser, getPermissions } from "@/lib/permissions";
 import { formatInputDate, getSingleParam, parseInputDate } from "@/lib/utils";
 
 import AppointmentsDialog from "./components/AppointmentsDialog";
@@ -27,19 +27,20 @@ export default async function AppointmentsPage({
     return <div className="p-8">Voce precisa estar logado.</div>;
   }
 
-  const clinicMember = await prisma.clinicMember.findFirst({
-    where: { userId: session.user.id },
-    select: { clinicId: true },
-  });
+  const access = await getClinicAccessByUser(session.user.id);
 
-  if (!clinicMember?.clinicId) {
+  if (!access) {
     return (
       <div className="p-8">Nenhuma clinica encontrada para o usuario.</div>
     );
   }
 
+  const permissions = getPermissions(access.role);
   const appointments = await getDashboardAppointmentsByClinic(
-    clinicMember.clinicId,
+    access.clinicId,
+    {
+      professionalId: access.role === "Médico" ? access.professionalId : null,
+    },
   );
 
   const params = await searchParams;
@@ -52,7 +53,9 @@ export default async function AppointmentsPage({
     <div className="flex flex-col gap-4 p-8">
       <h2 className="mb-2 text-base font-bold">Agendamentos</h2>
 
-      <AppointmentsDialog clinicId={clinicMember.clinicId} />
+      {permissions.canCreate && (
+        <AppointmentsDialog clinicId={access.clinicId} />
+      )}
 
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-start">
         <AppointmentsFilters
@@ -63,10 +66,12 @@ export default async function AppointmentsPage({
       </div>
 
       <AppointmentsList
-        clinicId={clinicMember.clinicId}
+        clinicId={access.clinicId}
         initialAppointments={appointments}
         search={search}
         selectedDate={selectedInputDate}
+        canUpdate={permissions.canUpdate}
+        canDelete={permissions.canDelete}
       />
     </div>
   );
