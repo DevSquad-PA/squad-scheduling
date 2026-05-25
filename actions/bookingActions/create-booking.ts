@@ -91,6 +91,22 @@ export const createAppointment = protectedActionClient
         });
       }
     } else if (patient) {
+      const existingPatientWithCpf = await prisma.patient.findFirst({
+        where: {
+          clinicId,
+          cpf: patient.cpf,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (existingPatientWithCpf) {
+        return returnValidationErrors(inputSchema, {
+          _errors: ["CPF j\u00e1 cadastrado para outro cliente."],
+        });
+      }
+
       const createdPatient = await prisma.patient.create({
         data: {
           clinicId,
