@@ -6,20 +6,22 @@ import { useState, useTransition } from "react";
 
 import { Input } from "@/components/ui/input";
 import { formatInputDate, parseInputDate } from "@/lib/utils";
+import AppointmentsDialog from "./AppointmentsDialog";
 
 type AppointmentsFiltersProps = {
   search: string;
   date: string;
+  clinicId: string;
 };
 
 export default function AppointmentsFilters({
   search,
-  date,
+  date,clinicId
 }: AppointmentsFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const [searchValue, setSearchValue] = useState(search);
   const [dateValue, setDateValue] = useState(date);
 
@@ -55,16 +57,14 @@ export default function AppointmentsFilters({
   }
 
   return (
-    <div className="flex flex-col items-start gap-4">
-      <div className="relative w-fit items-center">
-        <Input
-          placeholder="Pesquisar"
-          className="w-80 pr-10"
-          value={searchValue}
-          onChange={(event) => updateFilters({ search: event.target.value })}
-        />
-        <Search className="text-text2 absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
-      </div>
+    <div className="flex items-center justify-between w-full">
+
+      
+
+      <AppointmentsDialog clinicId={clinicId}/>
+
+      
+      
 
       <div className="flex items-center gap-4">
         <button
@@ -90,6 +90,19 @@ export default function AppointmentsFilters({
           <ChevronRight className="h-6 w-6 cursor-pointer" />
         </button>
       </div>
+
+
+      <div className="relative w-fit items-center">
+        <Input
+          placeholder="Pesquisar"
+          className="w-80 pr-10"
+          value={searchValue}
+          onChange={(event) => updateFilters({ search: event.target.value })}
+        />
+        <Search className="text-text2 absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
+      </div>
+
+
     </div>
   );
 }

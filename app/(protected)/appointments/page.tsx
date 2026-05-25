@@ -52,17 +52,22 @@ export default async function AppointmentsPage({
     <div className="flex flex-col gap-4 p-8">
       <h2 className="mb-2 text-base font-bold">Agendamentos</h2>
 
-      <AppointmentsDialog clinicId={clinicMember.clinicId} />
+      
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-start">
+      <div className="flex gap-4 justify-between items-center">
+
+        {/* <AppointmentsDialog clinicId={clinicMember.clinicId} /> */}
+        
         <AppointmentsFilters
           key={`${search}-${selectedInputDate}`}
           search={search}
           date={selectedInputDate}
-        />        
+          clinicId={clinicMember.clinicId}
+        />
       </div>
 
       <AppointmentsList
+        key={`${clinicMember.clinicId}`}
         clinicId={clinicMember.clinicId}
         initialAppointments={appointments}
         search={search}

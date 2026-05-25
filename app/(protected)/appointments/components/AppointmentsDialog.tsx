@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import z from "zod";
 
@@ -88,6 +88,7 @@ function formatTelefone(value: string) {
 }
 
 export default function AppointmentsDialog({ clinicId }: { clinicId: string }) {
+
   const [categoria, setCategoria] = useState("");
   const [isNewClient, setIsNewClient] = useState(true);
   const [selectedPatientId, setSelectedPatientId] = useState<
@@ -469,10 +470,14 @@ export default function AppointmentsDialog({ clinicId }: { clinicId: string }) {
           )}
 
           <DialogFooter>
-            <Button type="submit" variant="themegreen">
-              Salvar
+
+            <Button type="submit" variant="themegreen"
+              disabled={mutation.isPending}>
+              {mutation.isPending ? "Agendando..." : "Agendar"}
             </Button>
+
           </DialogFooter>
+
         </form>
       </DialogContent>
     </Dialog>
