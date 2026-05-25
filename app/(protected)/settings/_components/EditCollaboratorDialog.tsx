@@ -1,13 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { UserPen } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import z from "zod";
 
-import { createCollaborator } from "@/actions/collaboratorActions/create-collaborator";
+import { updateCollaborator } from "@/actions/collaboratorActions/update-collaborator";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -26,12 +27,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
+import { formatPhone } from "@/lib/utils";
+import type { Collaborator } from "@/types/collaborators/collaborator";
 
 const formSchema = z.object({
   name: z.string().min(3, "Nome obrigatório"),
-  username: z.string().min(3, "Usuário obrigatório"),
   email: z.string().email("Email inválido"),
-  password: z.string().min(6, "Senha mínima 6 caracteres"),
   phone: z.string().min(14, "Telefone inválido"),
   role: z.string().min(1, "Selecione o tipo"),
 });
@@ -39,14 +40,13 @@ const formSchema = z.object({
 type FormSchema = z.infer<typeof formSchema>;
 type CollaboratorRole = "Administrador" | "Atendimento" | "M\u00e9dico";
 
-function formatPhone(value: string) {
-  return value
-    .replace(/\D/g, "")
-    .replace(/(\d{2})(\d)/, "($1) $2")
-    .replace(/(\d{5})(\d)/, "$1-$2");
-}
+type EditCollaboratorDialogProps = {
+  collaborator: Collaborator;
+};
 
-export default function CollaboratorDialog() {
+export default function EditCollaboratorDialog({
+  collaborator,
+}: EditCollaboratorDialogProps) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const toast = useToast();
@@ -54,14 +54,23 @@ export default function CollaboratorDialog() {
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      username: "",
-      email: "",
-      password: "",
-      phone: "",
-      role: "",
+      name: collaborator.name,
+      email: collaborator.email,
+      phone: formatPhone(collaborator.phone),
+      role: collaborator.role,
     },
   });
+
+  useEffect(() => {
+    if (!open) {
+      form.reset({
+        name: collaborator.name,
+        email: collaborator.email,
+        phone: formatPhone(collaborator.phone),
+        role: collaborator.role,
+      });
+    }
+  }, [collaborator, form, open]);
 
   const phone = useWatch({
     control: form.control,
@@ -74,10 +83,9 @@ export default function CollaboratorDialog() {
 
   const error = form.formState.errors;
 
-  const { execute, status } = useAction(createCollaborator, {
+  const { execute, status } = useAction(updateCollaborator, {
     onSuccess: () => {
-      toast.success("Colaborador criado");
-      form.reset();
+      toast.success("Colaborador atualizado");
       setOpen(false);
       router.refresh();
     },
@@ -94,16 +102,15 @@ export default function CollaboratorDialog() {
         return;
       }
 
-      toast.error("Erro ao criar colaborador");
+      toast.error("Erro ao atualizar colaborador");
     },
   });
 
   const onSubmit = (data: FormSchema) => {
     execute({
+      collaboratorId: collaborator.id,
       nome: data.name,
-      usuario: data.username,
       email: data.email,
-      senha: data.password,
       contato: data.phone,
       tipo: data.role as CollaboratorRole,
     });
@@ -118,18 +125,14 @@ export default function CollaboratorDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant="themegreen"
-          className="w-fit"
-          disabled={status === "executing"}
-        >
-          + Colaborador
+        <Button size="icon" variant="ghost">
+          <UserPen className="h-5 w-5 hover:text-primary" />
         </Button>
       </DialogTrigger>
 
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Novo colaborador</DialogTitle>
+          <DialogTitle>Editar colaborador</DialogTitle>
         </DialogHeader>
 
         <form
@@ -141,27 +144,9 @@ export default function CollaboratorDialog() {
             <span className="text-alert text-xs">{error.name.message}</span>
           )}
 
-          <Input placeholder="Usuário" {...form.register("username")} />
-          {error.username && (
-            <span className="text-alert text-xs">
-              {error.username.message}
-            </span>
-          )}
-
           <Input placeholder="Email" {...form.register("email")} />
           {error.email && (
             <span className="text-alert text-xs">{error.email.message}</span>
-          )}
-
-          <Input
-            type="password"
-            placeholder="Senha"
-            {...form.register("password")}
-          />
-          {error.password && (
-            <span className="text-alert text-xs">
-              {error.password.message}
-            </span>
           )}
 
           <Input

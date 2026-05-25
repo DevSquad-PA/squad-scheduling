@@ -16,6 +16,8 @@ type AppointmentsListProps = {
   initialAppointments: PropsAppointment[];
   search: string;
   selectedDate: string;
+  canUpdate: boolean;
+  canDelete: boolean;
 };
 
 async function fetchAppointments() {
@@ -27,6 +29,8 @@ export default function AppointmentsList({
   initialAppointments,
   search,
   selectedDate,
+  canUpdate,
+  canDelete,
 }: AppointmentsListProps) {
   const { data: appointments = initialAppointments } = useQuery({
     queryKey: ["appointments", clinicId],
@@ -53,19 +57,23 @@ export default function AppointmentsList({
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-base font-semibold">{appointment.nome ?? "—"}</CardTitle>
-              <div className="flex gap-2">
-                <EditAppointment
-                  appointment={{
-                    id: appointment.id,
-                    data: appointment.data,
-                    hora: appointment.hora,
-                  }}
-                />
+              {(canUpdate || canDelete) && (
+                <div className="flex gap-2">
+                  {canUpdate && (
+                    <EditAppointment
+                      appointment={{
+                        id: appointment.id,
+                        data: appointment.data,
+                        hora: appointment.hora,
+                      }}
+                    />
+                  )}
 
-                <DeleteAppointment
-                  appointmentId={appointment.id}
-                />
-              </div>
+                  {canDelete && (
+                    <DeleteAppointment appointmentId={appointment.id} />
+                  )}
+                </div>
+              )}
             </CardHeader>
             <CardContent className="flex flex-col gap-1 text-sm">
               <p>

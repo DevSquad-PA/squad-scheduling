@@ -1,8 +1,8 @@
-export type Colaboradores = {
-  nome: string;
-  usuario: string;
+export type Collaborator = {
+  id: string;
+  name: string;
+  username: string;
   email: string;
-  senha: string;
-  contato: string;
-  tipo: string;
+  phone: string;
+  role: string;
 };

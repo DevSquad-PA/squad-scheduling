@@ -1,14 +1,13 @@
 "use client";
 
-import { Search } from "lucide-react";
-import { useState, useTransition } from "react";
+import { Pencil, Search, Trash } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 
 import { createProfessional as createProfessionalAction } from "@/actions/professionalActions/create-professional";
-import { updateProfessional as updateProfessionalAction } from "@/actions/professionalActions/update-professional";
 import { deleteProfessional as deleteProfessionalAction } from "@/actions/professionalActions/delete-professional";
+import { updateProfessional as updateProfessionalAction } from "@/actions/professionalActions/update-professional";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash } from "lucide-react";
-import { useToast } from "@/components/ui/toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -28,17 +27,33 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { useToast } from "@/components/ui/toast";
 import { formatPhone } from "@/lib/utils";
 import type {
   CreateProfessionalInput,
   Professional,
 } from "@/types/professionals/professional";
-import Link from "next/link";
+
+type ActionValidationErrors = {
+  _errors?: string[];
+  [key: string]: unknown;
+};
+
+type ActionResponse = {
+  validationErrors?: ActionValidationErrors;
+  serverError?: unknown;
+};
+
+type ProfessionalFormInput = Omit<CreateProfessionalInput, "services"> & {
+  services: string[] | string;
+};
 
 export default function ProfessionalsList({
   initial,
+  canCreate,
 }: {
   initial: Professional[];
+  canCreate: boolean;
 }) {
   const ITEMS_PER_PAGE = 16;
   const COLUMNS = 4;
@@ -48,7 +63,6 @@ export default function ProfessionalsList({
   const [open, setOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [isPending, startTransition] = useTransition();
   const [editOpen, setEditOpen] = useState(false);
   const [editingProfessional, setEditingProfessional] = useState<Professional | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -75,7 +89,7 @@ export default function ProfessionalsList({
                 if (typeof item === "string") errors.push(item);
               });
             } else if (val && typeof val === "object" && "_errors" in val) {
-              const fieldErrors = (val as any)._errors;
+              const fieldErrors = (val as { _errors?: unknown })._errors;
               if (Array.isArray(fieldErrors)) {
                 fieldErrors.forEach((item) => {
                   if (typeof item === "string") errors.push(item);
@@ -210,7 +224,7 @@ export default function ProfessionalsList({
     onSubmit,
     onCancel,
   }: {
-    initial: Partial<CreateProfessionalInput>;
+    initial: Partial<ProfessionalFormInput>;
     onSubmit: (p: CreateProfessionalInput) => void;
     onCancel: () => void;
   }) => {
@@ -278,6 +292,7 @@ export default function ProfessionalsList({
       <h2 className="mb-2 text-base font-bold">Profissionais</h2>
 
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        {canCreate && (
         <div className="w-fit">
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -300,6 +315,7 @@ export default function ProfessionalsList({
             </DialogContent>
           </Dialog>
         </div>
+        )}
 
         <div className="relative w-full max-w-xs md:w-fit">
           <Input
@@ -349,17 +365,17 @@ export default function ProfessionalsList({
                       onSubmit={async (payload) => {
                         setUpdatePending(true);
                         try {
-                          const res = await updateProfessionalAction({ professionalId: p.id, ...payload } as any);
-                          if ((res as any)?.validationErrors) {
-                            const ve = (res as any).validationErrors;
+                          const res = await updateProfessionalAction({ professionalId: p.id, ...payload } as unknown as Parameters<typeof updateProfessionalAction>[0]);
+                          if ((res as ActionResponse)?.validationErrors) {
+                            const ve = (res as ActionResponse).validationErrors!;
                             const errs: string[] = [];
                             if (ve._errors) errs.push(...ve._errors);
                             Object.entries(ve).forEach(([key, val]) => {
                               if (key !== "_errors") {
                                 if (Array.isArray(val)) {
                                   val.forEach((item) => { if (typeof item === "string") errs.push(item); });
-                                } else if (val && typeof val === "object" && "_errors" in (val as any)) {
-                                  const fe = (val as any)._errors;
+                                } else if (val && typeof val === "object" && "_errors" in val) {
+                                  const fe = (val as { _errors?: unknown })._errors;
                                   if (Array.isArray(fe)) fe.forEach((it) => { if (typeof it === "string") errs.push(it); });
                                 }
                               }
@@ -367,8 +383,8 @@ export default function ProfessionalsList({
                             toast.error("Erro", errs.length > 0 ? errs[0] : "Erro de validação ao atualizar profissional.");
                             return;
                           }
-                          if ((res as any)?.serverError) {
-                            toast.error("Erro", String((res as any).serverError));
+                          if ((res as ActionResponse)?.serverError) {
+                            toast.error("Erro", String((res as ActionResponse).serverError));
                             return;
                           }
                           // Atualiza localmente mesclando os campos
@@ -376,12 +392,14 @@ export default function ProfessionalsList({
                             ...item,
                             specialty: payload.specialty ?? item.specialty,
                             services: payload.services ?? item.services,
-                            user: {
-                              ...item.user,
-                              name: payload.name ?? item.user?.name,
-                              email: payload.email ?? item.user?.email,
-                              phone: payload.phone ?? item.user?.phone,
-                            }
+                            user: item.user
+                              ? {
+                                  ...item.user,
+                                  name: payload.name ?? item.user.name,
+                                  email: payload.email ?? item.user.email,
+                                  phone: payload.phone ?? item.user.phone,
+                                }
+                              : null,
                           } : item));
                           setEditOpen(false);
                           setEditingProfessional(null);
@@ -416,9 +434,9 @@ export default function ProfessionalsList({
                       <Button variant="destructive" onClick={async () => {
                         setDeletePending(true);
                         try {
-                          const res = await deleteProfessionalAction({ professionalId: p.id } as any);
-                          if ((res as any)?.validationErrors) {
-                            const ve = (res as any).validationErrors;
+                          const res = await deleteProfessionalAction({ professionalId: p.id });
+                          if ((res as ActionResponse)?.validationErrors) {
+                            const ve = (res as ActionResponse).validationErrors!;
                             const errs: string[] = [];
                             if (ve._errors) errs.push(...ve._errors);
                             Object.entries(ve).forEach(([key, val]) => {
@@ -431,8 +449,8 @@ export default function ProfessionalsList({
                             toast.error("Erro", errs.length > 0 ? errs[0] : "Erro ao excluir profissional.");
                             return;
                           }
-                          if ((res as any)?.serverError) {
-                            toast.error("Erro", String((res as any).serverError));
+                          if ((res as ActionResponse)?.serverError) {
+                            toast.error("Erro", String((res as ActionResponse).serverError));
                             return;
                           }
                           setProfessionals((prev) => prev.filter((item) => item.id !== p.id));
