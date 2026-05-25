@@ -27,9 +27,17 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { formatPhone } from "@/lib/utils";
 import type {
+  AvailableDoctor,
   CreateProfessionalInput,
   Professional,
 } from "@/types/professionals/professional";
@@ -44,21 +52,33 @@ type ActionResponse = {
   serverError?: unknown;
 };
 
-type ProfessionalFormInput = Omit<CreateProfessionalInput, "services"> & {
+type EditProfessionalInput = {
+  name: string;
+  email: string;
+  phone: string;
+  specialty: string;
+  services: string[];
+};
+
+type EditProfessionalInitial = Omit<EditProfessionalInput, "services"> & {
   services: string[] | string;
 };
 
 export default function ProfessionalsList({
   initial,
+  availableDoctors,
   canCreate,
 }: {
   initial: Professional[];
+  availableDoctors: AvailableDoctor[];
   canCreate: boolean;
 }) {
   const ITEMS_PER_PAGE = 16;
   const COLUMNS = 4;
 
   const [professionals, setProfessionals] = useState<Professional[]>(initial);
+  const [doctorOptions, setDoctorOptions] =
+    useState<AvailableDoctor[]>(availableDoctors);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -108,7 +128,11 @@ export default function ProfessionalsList({
         return;
       }
       if (res?.data) {
-        setProfessionals((prev) => [res.data as Professional, ...prev]);
+        const created = res.data as Professional;
+        setProfessionals((prev) => [created, ...prev]);
+        setDoctorOptions((prev) =>
+          prev.filter((doctor) => doctor.id !== created.userId),
+        );
         setOpen(false);
         toast.success("Profissional criado", "Cadastro realizado com sucesso.");
       }
@@ -143,9 +167,7 @@ export default function ProfessionalsList({
     onSubmit: (p: CreateProfessionalInput) => void;
     onCancel: () => void;
   }) => {
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
-    const [phone, setPhone] = useState("");
+    const [userId, setUserId] = useState("");
     const [specialty, setSpecialty] = useState("");
     const [services, setServices] = useState("");
 
@@ -154,9 +176,7 @@ export default function ProfessionalsList({
         onSubmit={(e) => {
           e.preventDefault();
           onSubmit({
-            name,
-            email,
-            phone,
+            userId,
             specialty,
             services: services
               .split(",")
@@ -167,34 +187,25 @@ export default function ProfessionalsList({
         className="flex flex-col gap-3"
       >
         <label className="flex flex-col gap-1">
-          <span className="text-sm">Nome</span>
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
+          <span className="text-sm">Usuario</span>
+          <Select value={userId} onValueChange={setUserId} required>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione um medico" />
+            </SelectTrigger>
+            <SelectContent>
+              {doctorOptions.map((doctor) => (
+                <SelectItem key={doctor.id} value={doctor.id}>
+                  {doctor.name || doctor.email}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm">Email</span>
-          <Input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm">Telefone</span>
-          <Input
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            maxLength={15}
-            placeholder="(11) 98765-4321"
-            value={phone}
-            onChange={(e) => setPhone(formatPhone(e.target.value))}
-          />
-        </label>
+        {doctorOptions.length === 0 && (
+          <p className="text-sm text-gray-500">
+            Nenhum medico cadastrado sem especialidade.
+          </p>
+        )}
         <label className="flex flex-col gap-1">
           <span className="text-sm">Especialidade</span>
           <Input
@@ -213,7 +224,7 @@ export default function ProfessionalsList({
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={createPending}>{createPending ? "Cadastrando..." : "Cadastrar"}</Button>
+          <Button type="submit" disabled={createPending || !userId}>{createPending ? "Cadastrando..." : "Cadastrar"}</Button>
         </div>
       </form>
     );
@@ -224,8 +235,8 @@ export default function ProfessionalsList({
     onSubmit,
     onCancel,
   }: {
-    initial: Partial<ProfessionalFormInput>;
-    onSubmit: (p: CreateProfessionalInput) => void;
+    initial: Partial<EditProfessionalInitial>;
+    onSubmit: (p: EditProfessionalInput) => void;
     onCancel: () => void;
   }) => {
     const [name, setName] = useState(initial.name ?? "");
@@ -454,6 +465,13 @@ export default function ProfessionalsList({
                             return;
                           }
                           setProfessionals((prev) => prev.filter((item) => item.id !== p.id));
+                          if (p.user) {
+                            setDoctorOptions((prev) =>
+                              [...prev, p.user as AvailableDoctor].sort((a, b) =>
+                                (a.name || a.email).localeCompare(b.name || b.email),
+                              ),
+                            );
+                          }
                           setDeleteOpen(false);
                           setDeletingProfessional(null);
                           toast.success("Profissional excluído", "Operação realizada com sucesso.");

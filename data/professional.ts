@@ -62,3 +62,43 @@ export const getProfessionalById = async (professionalId: string) => {
     user,
   };
 };
+
+export const getDoctorsWithoutSpecialtyByClinic = async (clinicId: string) => {
+  const members = await prisma.clinicMember.findMany({
+    where: {
+      clinicId,
+      role: {
+        description: "Médico",
+      },
+      userId: {
+        not: null,
+      },
+      user: {
+        professionals: {
+          none: {
+            clinicId,
+          },
+        },
+      },
+    },
+    orderBy: {
+      user: {
+        name: "asc",
+      },
+    },
+    select: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+        },
+      },
+    },
+  });
+
+  return members
+    .map((member) => member.user)
+    .filter((user): user is NonNullable<typeof user> => Boolean(user));
+};
