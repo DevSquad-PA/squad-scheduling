@@ -10,7 +10,6 @@ import type { PropsAppointment } from "@/types/appointment/appointments";
 import DeleteAppointment from "./DeleteAppointments";
 import EditAppointment from "./EditAppointments";
 
-
 type AppointmentsListProps = {
   clinicId: string;
   initialAppointments: PropsAppointment[];
@@ -32,21 +31,19 @@ export default function AppointmentsList({
   canUpdate,
   canDelete,
 }: AppointmentsListProps) {
-  const { data: appointments = initialAppointments } = useQuery({
+  const { data: appointments = initialAppointments, isFetching } = useQuery({
     queryKey: ["appointments", clinicId],
     queryFn: fetchAppointments,
     initialData: initialAppointments,
     staleTime: 30_000,
   });
-  const parsedSelectedDate = parseInputDate(selectedDate) ?? new Date();
 
+  const parsedSelectedDate = parseInputDate(selectedDate) ?? new Date();
   const filteredAppointments = filterAppointments(
     appointments,
     search,
     parsedSelectedDate,
   );
-
-
 
   return (
     <>
@@ -56,12 +53,16 @@ export default function AppointmentsList({
             key={`${appointment.data}-${appointment.hora}-${appointment.cpf}-${index}`}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-base font-semibold">{appointment.nome ?? "—"}</CardTitle>
+              <CardTitle className="text-base font-semibold">
+                {appointment.cliente ?? "N/A"}
+              </CardTitle>
+
               {(canUpdate || canDelete) && (
                 <div className="flex gap-2">
                   {canUpdate && (
                     <EditAppointment
                       appointment={{
+                        professionalId: appointment.professionalId,
                         id: appointment.id,
                         data: appointment.data,
                         hora: appointment.hora,
@@ -75,18 +76,19 @@ export default function AppointmentsList({
                 </div>
               )}
             </CardHeader>
+
             <CardContent className="flex flex-col gap-1 text-sm">
               <p>
-                <strong>Servico:</strong> {appointment.descricao ?? "—"}
+                <strong>Profissional:</strong> {appointment.nome ?? "N/A"}
               </p>
-
-              <p className="flex items-center gap-2">
-                <strong>Hora:</strong>
-                {appointment.hora ?? "N/A"}
-              </p>
-
               <p>
-                <strong>Cliente:</strong> {appointment.cliente ?? "N/A"}
+                <strong>Serviço:</strong> {appointment.descricao ?? "N/A"}
+              </p>
+              <p>
+                <strong>Data:</strong> {appointment.data ?? "N/A"}
+              </p>
+              <p>
+                <strong>Hora:</strong> {appointment.hora ?? "N/A"}
               </p>
               <p>
                 <strong>Contato:</strong> {appointment.contato ?? "N/A"}
@@ -94,17 +96,26 @@ export default function AppointmentsList({
               <p>
                 <strong>CPF:</strong> {appointment.cpf ?? "N/A"}
               </p>
-              <p>
-                <strong>Endereco:</strong> {appointment.endereco ?? "N/A"}
-              </p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {filteredAppointments.length === 0 && (
-        <p className="text-sm text-gray-500">Nenhum agendamento</p>
-      )}
+      {isFetching ? (
+        <>
+          <hr className="border-0.5 border-primary" />
+          <p className="w-full text-center text-sm text-gray-500">
+            Carregando...
+          </p>
+        </>
+      ) : filteredAppointments.length === 0 ? (
+        <>
+          <hr className="border-0.5 border-primary" />
+          <p className="w-full text-center text-sm text-gray-500">
+            Nenhum agendamento
+          </p>
+        </>
+      ) : null}
     </>
   );
 }

@@ -51,6 +51,7 @@ export const getDashboardAppointmentsByClinic = async (
     return {
       id: appointment.id,
       nome: professionalName,
+      professionalId: appointment.professionalId ?? "",
       data: new Date(appointment.date).toLocaleDateString("pt-BR", {
         timeZone: "UTC",
       }),

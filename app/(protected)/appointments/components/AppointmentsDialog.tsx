@@ -469,8 +469,12 @@ export default function AppointmentsDialog({ clinicId }: { clinicId: string }) {
           )}
 
           <DialogFooter>
-            <Button type="submit" variant="themegreen">
-              Salvar
+            <Button
+              type="submit"
+              variant="themegreen"
+              disabled={mutation.isPending}
+            >
+              {mutation.isPending ? "Agendando..." : "Agendar"}
             </Button>
           </DialogFooter>
         </form>

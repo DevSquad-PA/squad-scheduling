@@ -1,11 +1,14 @@
 "use client";
 
-import { useTransition } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { Trash } from "lucide-react";
+
 import { cancelAppointment } from "@/actions/bookingActions/cancel-booking";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -15,7 +18,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Trash } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 type DeleteAppointmentDialogProps = {
   appointmentId: string;
@@ -24,34 +27,55 @@ type DeleteAppointmentDialogProps = {
 export default function DeleteAppointment({
   appointmentId,
 }: DeleteAppointmentDialogProps) {
-  const [isPending, startTransition] = useTransition();
   const queryClient = useQueryClient();
 
-  async function handleDelete() {
-    startTransition(async () => {
-      try {
-        const res = await cancelAppointment({ appointmentId });
-        
-        if (res?.validationErrors || res?.serverError) {
-          // Exibe os erros de validação ou do servidor
-          const errorMsg = res.validationErrors?._errors?.[0] || res.serverError || "Erro ao excluir agendamento.";
-          alert(errorMsg);
-        } else {
-          // Invalida o cache do React Query para atualizar a lista automaticamente na tela
-          await queryClient.invalidateQueries({ queryKey: ["appointments"] });
-          alert("Agendamento excluído com sucesso!");
-        }
-      } catch (error) {
-        console.error(error);
-        alert("Erro inesperado ao excluir agendamento.");
+  const toast = useToast();
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const res = await cancelAppointment({
+        appointmentId,
+      });
+
+      if (res?.validationErrors || res?.serverError) {
+        throw new Error(
+          res.validationErrors?._errors?.[0] ||
+            res.serverError ||
+            "Erro ao excluir agendamento."
+        );
       }
-    });
-  }
+
+      return res;
+    },
+
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["appointments"],
+      });
+
+      toast.success(
+        "Agendamento excluído com sucesso!"
+      );
+    },
+
+    onError: (error: Error) => {
+      console.error(error);
+
+      toast.error(
+        error.message ||
+          "Erro inesperado ao excluir agendamento."
+      );
+    },
+  });
 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button size="icon" variant="ghost">
+        <Button
+          size="icon"
+          variant="ghost"
+          disabled={mutation.isPending}
+        >
           <Trash className="h-5 w-5 hover:text-red-500" />
         </Button>
       </AlertDialogTrigger>
@@ -59,7 +83,7 @@ export default function DeleteAppointment({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            Deseja excluir este agendamento?
+            Deseja cancelar este agendamento?
           </AlertDialogTitle>
 
           <AlertDialogDescription>
@@ -68,13 +92,21 @@ export default function DeleteAppointment({
         </AlertDialogHeader>
 
         <AlertDialogFooter>
-          <AlertDialogCancel>
+          <AlertDialogCancel
+            disabled={mutation.isPending}
+          >
             Cancelar
           </AlertDialogCancel>
 
-          <AlertDialogAction onClick={handleDelete}>
-            Excluir
-          </AlertDialogAction>
+          <Button
+            variant="destructive"
+            onClick={() => mutation.mutate()}
+            disabled={mutation.isPending}
+          >
+            {mutation.isPending
+              ? "Excluindo..."
+              : "Excluir"}
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

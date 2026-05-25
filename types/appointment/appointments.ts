@@ -24,4 +24,5 @@ export type PropsAppointment = {
   contato: string;
   cpf: string;
   email: string;
+  professionalId: string;
 };

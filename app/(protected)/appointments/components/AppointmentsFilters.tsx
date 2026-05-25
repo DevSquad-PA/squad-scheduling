@@ -7,14 +7,20 @@ import { useState, useTransition } from "react";
 import { Input } from "@/components/ui/input";
 import { formatInputDate, parseInputDate } from "@/lib/utils";
 
+import AppointmentsDialog from "./AppointmentsDialog";
+
 type AppointmentsFiltersProps = {
   search: string;
   date: string;
+  clinicId: string;
+  canCreate: boolean;
 };
 
 export default function AppointmentsFilters({
   search,
   date,
+  clinicId,
+  canCreate,
 }: AppointmentsFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -55,16 +61,8 @@ export default function AppointmentsFilters({
   }
 
   return (
-    <div className="flex flex-col items-start gap-4">
-      <div className="relative w-fit items-center">
-        <Input
-          placeholder="Pesquisar"
-          className="w-80 pr-10"
-          value={searchValue}
-          onChange={(event) => updateFilters({ search: event.target.value })}
-        />
-        <Search className="text-text2 absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
-      </div>
+    <div className="flex w-full items-center justify-between">
+      {canCreate ? <AppointmentsDialog clinicId={clinicId} /> : <span />}
 
       <div className="flex items-center gap-4">
         <button
@@ -89,6 +87,16 @@ export default function AppointmentsFilters({
         >
           <ChevronRight className="h-6 w-6 cursor-pointer" />
         </button>
+      </div>
+
+      <div className="relative w-fit items-center">
+        <Input
+          placeholder="Pesquisar"
+          className="w-80 pr-10"
+          value={searchValue}
+          onChange={(event) => updateFilters({ search: event.target.value })}
+        />
+        <Search className="text-text2 absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
       </div>
     </div>
   );

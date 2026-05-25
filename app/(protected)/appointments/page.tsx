@@ -5,7 +5,6 @@ import { auth } from "@/lib/auth";
 import { getClinicAccessByUser, getPermissions } from "@/lib/permissions";
 import { formatInputDate, getSingleParam, parseInputDate } from "@/lib/utils";
 
-import AppointmentsDialog from "./components/AppointmentsDialog";
 import AppointmentsFilters from "./components/AppointmentsFilters";
 import AppointmentsList from "./components/AppointmentsList";
 
@@ -53,16 +52,14 @@ export default async function AppointmentsPage({
     <div className="flex flex-col gap-4 p-8">
       <h2 className="mb-2 text-base font-bold">Agendamentos</h2>
 
-      {permissions.canCreate && (
-        <AppointmentsDialog clinicId={access.clinicId} />
-      )}
-
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-start">
+      <div className="flex items-center justify-between gap-4">
         <AppointmentsFilters
           key={`${search}-${selectedInputDate}`}
           search={search}
           date={selectedInputDate}
-        />        
+          clinicId={access.clinicId}
+          canCreate={permissions.canCreate}
+        />
       </div>
 
       <AppointmentsList
