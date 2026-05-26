@@ -1,7 +1,11 @@
 import { headers } from "next/headers";
 
-import { getProfessionalsByClinic } from "@/data/professional";
+import {
+  getDoctorsWithoutSpecialtyByClinic,
+  getProfessionalsByClinic,
+} from "@/data/professional";
 import { auth } from "@/lib/auth";
+import { getPermissions } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
 import ProfessionalsList from "./_components/ProfessionalsList";
@@ -19,7 +23,7 @@ export default async function ProfessionalsPage() {
 
   const clinicMember = await prisma.clinicMember.findFirst({
     where: { userId },
-    select: { clinicId: true },
+    include: { role: true },
   });
 
   if (!clinicMember?.clinicId) {
@@ -31,6 +35,16 @@ export default async function ProfessionalsPage() {
   }
 
   const professionals = await getProfessionalsByClinic(clinicMember.clinicId);
+  const availableDoctors = await getDoctorsWithoutSpecialtyByClinic(
+    clinicMember.clinicId,
+  );
+  const permissions = getPermissions(clinicMember.role?.description);
 
-  return <ProfessionalsList initial={professionals} />;
+  return (
+    <ProfessionalsList
+      initial={professionals}
+      availableDoctors={availableDoctors}
+      canCreate={permissions.canCreate}
+    />
+  );
 }

@@ -3,13 +3,26 @@
 import { headers } from "next/headers";
 
 import { auth } from "@/lib/auth";
+import { getClinicAccessByUser } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { formatHora } from "@/lib/utils";
 import type { PropsAppointment } from "@/types/appointment/appointments";
 
-export const getAppointmentsByClinic = async (clinicId: string) => {
+type GetAppointmentsByClinicOptions = {
+  professionalId?: string | null;
+};
+
+export const getAppointmentsByClinic = async (
+  clinicId: string,
+  options: GetAppointmentsByClinicOptions = {},
+) => {
   return await prisma.appointment.findMany({
-    where: { clinicId },
+    where: {
+      clinicId,
+      ...(options.professionalId
+        ? { professionalId: options.professionalId }
+        : {}),
+    },
     include: {
       professional: {
         include: {
@@ -23,9 +36,10 @@ export const getAppointmentsByClinic = async (clinicId: string) => {
 };
 
 export const getDashboardAppointmentsByClinic = async (
-  clinicId: string
+  clinicId: string,
+  options: GetAppointmentsByClinicOptions = {},
 ): Promise<PropsAppointment[]> => {
-  const appointments = await getAppointmentsByClinic(clinicId);
+  const appointments = await getAppointmentsByClinic(clinicId, options);
 
   return appointments.map((appointment) => {
     const professionalName = appointment.professional?.user?.name ||
@@ -37,6 +51,7 @@ export const getDashboardAppointmentsByClinic = async (
     return {
       id: appointment.id,
       nome: professionalName,
+      professionalId: appointment.professionalId ?? "",
       data: new Date(appointment.date).toLocaleDateString("pt-BR", {
         timeZone: "UTC",
       }),
@@ -62,14 +77,13 @@ export const getDashboardAppointmentsByCurrentUser = async (): Promise<PropsAppo
     throw new Error("Unauthorized");
   }
 
-  const clinicMember = await prisma.clinicMember.findFirst({
-    where: { userId: session.user.id },
-    select: { clinicId: true },
-  });
+  const access = await getClinicAccessByUser(session.user.id);
 
-  if (!clinicMember?.clinicId) {
+  if (!access?.clinicId) {
     throw new Error("Clinic not found");
   }
 
-  return getDashboardAppointmentsByClinic(clinicMember.clinicId);
+  return getDashboardAppointmentsByClinic(access.clinicId, {
+    professionalId: access.role === "Médico" ? access.professionalId : null,
+  });
 };

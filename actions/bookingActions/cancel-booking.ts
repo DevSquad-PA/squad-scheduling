@@ -5,6 +5,7 @@ import { returnValidationErrors } from "next-safe-action";
 import { z } from "zod";
 
 import { protectedActionClient } from "@/lib/action-client";
+import { getClinicAccessByUser, getPermissions } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
 const inputSchema = z.object({
@@ -13,7 +14,16 @@ const inputSchema = z.object({
 
 export const cancelAppointment = protectedActionClient
   .inputSchema(inputSchema)
-  .action(async ({ parsedInput: { appointmentId } }) => {
+  .action(async ({ parsedInput: { appointmentId }, ctx }) => {
+    const access = await getClinicAccessByUser(ctx.user.id);
+    const permissions = getPermissions(access?.role);
+
+    if (!access || !permissions.canDelete) {
+      return returnValidationErrors(inputSchema, {
+        _errors: ["Você não tem permissão para excluir agendamentos."],
+      });
+    }
+
     const appointment = await prisma.appointment.findUnique({
       where: {
         id: appointmentId,
@@ -24,8 +34,14 @@ export const cancelAppointment = protectedActionClient
     });
 
     if (!appointment) {
-      returnValidationErrors(inputSchema, {
+      return returnValidationErrors(inputSchema, {
         _errors: ["Agendamento nao encontrado."],
+      });
+    }
+
+    if (appointment.clinicId !== access.clinicId) {
+      return returnValidationErrors(inputSchema, {
+        _errors: ["Agendamento não pertence à sua clínica."],
       });
     }
 
@@ -45,7 +61,7 @@ export const cancelAppointment = protectedActionClient
     );
 
     if (dateTime <= new Date()) {
-      returnValidationErrors(inputSchema, {
+      return returnValidationErrors(inputSchema, {
         _errors: ["Não é possível cancelar um agendamento passado."],
       });
     }

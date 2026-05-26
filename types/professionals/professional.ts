@@ -14,9 +14,14 @@ export type Professional = {
 };
 
 export type CreateProfessionalInput = {
-  name: string;
-  email: string;
-  phone: string;
+  userId: string;
   specialty: string;
   services: string[];
+};
+
+export type AvailableDoctor = {
+  id: string;
+  name: string | null;
+  email: string;
+  phone: string | null;
 };
