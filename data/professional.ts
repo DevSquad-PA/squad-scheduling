@@ -11,6 +11,7 @@ export const getProfessionalsByClinic = async (clinicId: string) => {
       createdAt: "asc",
     },
   });
+  
 
   const userIds = professionals
     .map((p) => p.userId)
