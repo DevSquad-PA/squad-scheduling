@@ -10,6 +10,7 @@ import { createAppointment } from "@/actions/bookingActions/create-booking";
 import { getAvailableTime } from "@/actions/get-date-available-time";
 import { getPatientsWithBookings } from "@/actions/get-patients-with-bookings";
 import { Button } from "@/components/ui/button";
+import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList } from "@/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -29,7 +30,6 @@ import {
 import { useToast } from "@/components/ui/toast";
 import { getProfessionalsByClinic } from "@/data/professional";
 import type { PatientWithBookings } from "@/types/patient/patient";
-import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList } from "@/components/ui/combobox";
 
 const formSchema = z.object({
   nome: z.string().min(3, "Nome obrigatório"),
@@ -175,6 +175,19 @@ export default function AppointmentsDialog({ clinicId }: { clinicId: string }) {
     // send date and time as strings to server for consistent parsing
     const date = data.date; // "YYYY-MM-DD"
     const time = data.hora; // "HH:mm"
+
+    if (isNewClient) {
+      const patientWithSameCpf = patients.find((patient) => patient.cpf === data.cpf);
+
+      if (patientWithSameCpf) {
+        form.setError("cpf", {
+          type: "validate",
+          message: "CPF ja cadastrado. Selecione o cliente existente.",
+        });
+        toast.error("CPF ja cadastrado", "Selecione o cliente existente para agendar.");
+        return;
+      }
+    }
 
     const selectedProfessional = professionals?.find(
       (p) => p.id === especialistaId,
@@ -338,7 +351,6 @@ export default function AppointmentsDialog({ clinicId }: { clinicId: string }) {
             </>
           ) : (
             <>
-            ///Ajuste na implementação --------------------------------------------------------
             <Combobox items={patients}>
               <ComboboxInput placeholder="Selecione um cliente" />
               <ComboboxContent>
@@ -370,7 +382,7 @@ export default function AppointmentsDialog({ clinicId }: { clinicId: string }) {
                 <SelectContent>
                   {patients.length === 0 ? (
                     <SelectItem value="empty" disabled>
-                      Nenhum cliente com agendamento
+                      Nenhum cliente cadastrado
                     </SelectItem>
                   ) : (
                     patients.map((p) => (

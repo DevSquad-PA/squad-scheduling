@@ -4,6 +4,7 @@ import { isPast } from "date-fns";
 import { returnValidationErrors } from "next-safe-action";
 import { z } from "zod";
 
+import { Prisma } from "@/generated/prisma/client";
 import { protectedActionClient } from "@/lib/action-client";
 import { getClinicAccessByUser, getPermissions } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
@@ -108,15 +109,27 @@ export const createAppointment = protectedActionClient
       }
 
       const createdPatient = await prisma.patient.create({
-        data: {
-          clinicId,
-          firstName: patient.name,
-          lastName: "",
-          cpf: patient.cpf,
-          phone: patient.phone,
-          addressNumber: patient.address,
-        },
-      });
+          data: {
+            clinicId,
+            firstName: patient.name,
+            lastName: "",
+            cpf: patient.cpf,
+            phone: patient.phone,
+            addressNumber: patient.address,
+          },
+        })
+        .catch((error: unknown) => {
+          if (
+            error instanceof Prisma.PrismaClientKnownRequestError &&
+            error.code === "P2002"
+          ) {
+            return returnValidationErrors(inputSchema, {
+              _errors: ["CPF j\u00e1 cadastrado para outro cliente."],
+            });
+          }
+
+          throw error;
+        });
 
       resolvedPatientId = createdPatient.id;
     }

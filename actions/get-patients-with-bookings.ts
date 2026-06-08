@@ -15,9 +15,6 @@ export const getPatientsWithBookings = actionClient
     const patients = await prisma.patient.findMany({
       where: {
         clinicId,
-        appointments: {
-          some: {},
-        },
       },
       orderBy: {
         firstName: "asc",
