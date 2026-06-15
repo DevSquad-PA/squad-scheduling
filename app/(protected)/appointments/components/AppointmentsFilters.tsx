@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 import { Input } from "@/components/ui/input";
 import { formatInputDate, parseInputDate } from "@/lib/utils";
@@ -14,6 +14,7 @@ type AppointmentsFiltersProps = {
   date: string;
   clinicId: string;
   canCreate: boolean;
+  setLoad: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export default function AppointmentsFilters({
@@ -21,11 +22,12 @@ export default function AppointmentsFilters({
   date,
   clinicId,
   canCreate,
+  setLoad,
 }: AppointmentsFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const [searchValue, setSearchValue] = useState(search);
   const [dateValue, setDateValue] = useState(date);
 
@@ -60,8 +62,15 @@ export default function AppointmentsFilters({
     updateFilters({ date: formatInputDate(nextDate) });
   }
 
-  return (
+
+  useEffect(() => {
+  setLoad(isPending);
+}, [isPending]);
+
+  return (<div className="flex w-full flex-col items-center justify-center gap-4">
     <div className="flex w-full items-center justify-between">
+      
+
       {canCreate ? <AppointmentsDialog clinicId={clinicId} /> : <span />}
 
       <div className="flex items-center gap-4">
@@ -98,6 +107,18 @@ export default function AppointmentsFilters({
         />
         <Search className="text-text2 absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
       </div>
+
+      
     </div>
+
+    {isPending && (
+        <div className="flex flex-col py-4 items-center justify-center w-full">
+          <p className="w-full text-center text-sm text-gray-500">
+            Carregando...
+          </p>
+        </div>
+      )}
+
+      </div>
   );
 }

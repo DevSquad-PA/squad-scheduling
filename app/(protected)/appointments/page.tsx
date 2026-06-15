@@ -52,16 +52,6 @@ export default async function AppointmentsPage({
     <div className="flex flex-col gap-4 p-8">
       <h2 className="mb-2 text-base font-bold">Agendamentos</h2>
 
-      <div className="flex items-center justify-between gap-4">
-        <AppointmentsFilters
-          key={`${search}-${selectedInputDate}`}
-          search={search}
-          date={selectedInputDate}
-          clinicId={access.clinicId}
-          canCreate={permissions.canCreate}
-        />
-      </div>
-
       <AppointmentsList
         clinicId={access.clinicId}
         initialAppointments={appointments}
@@ -69,6 +59,7 @@ export default async function AppointmentsPage({
         selectedDate={selectedInputDate}
         canUpdate={permissions.canUpdate}
         canDelete={permissions.canDelete}
+        canCreate={permissions.canCreate}
       />
     </div>
   );
