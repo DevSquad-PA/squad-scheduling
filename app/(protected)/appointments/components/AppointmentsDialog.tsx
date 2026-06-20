@@ -10,7 +10,6 @@ import { createAppointment } from "@/actions/bookingActions/create-booking";
 import { getAvailableTime } from "@/actions/get-date-available-time";
 import { getPatientsWithBookings } from "@/actions/get-patients-with-bookings";
 import { Button } from "@/components/ui/button";
-import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList } from "@/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -351,19 +350,6 @@ export default function AppointmentsDialog({ clinicId }: { clinicId: string }) {
             </>
           ) : (
             <>
-            <Combobox items={patients}>
-              <ComboboxInput placeholder="Selecione um cliente" />
-              <ComboboxContent>
-                <ComboboxEmpty>Nenhum cliente encontrado</ComboboxEmpty>
-                <ComboboxList>
-                  {(item) => (
-                    <ComboboxItem key={item.id} value={selectedPatientId} >
-                      {item.firstName} {item.lastName ?? ""} - {item.cpf ?? item.phone}
-                    </ComboboxItem>
-                  )}
-                </ComboboxList>
-              </ComboboxContent>
-            </Combobox>
               <Select
                 value={selectedPatientId}
                 onValueChange={(v) => {

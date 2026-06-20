@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDashboardAppointmentsByCurrentUser } from "@/data/appointments";
 import { filterAppointments, parseInputDate } from "@/lib/utils";
 import type { PropsAppointment } from "@/types/appointment/appointments";
-
 import DeleteAppointment from "./DeleteAppointments";
 import EditAppointment from "./EditAppointments";
+import { useEffect, useState } from "react";
+import AppointmentsFilters from "./AppointmentsFilters";
 
 type AppointmentsListProps = {
   clinicId: string;
@@ -17,7 +18,10 @@ type AppointmentsListProps = {
   selectedDate: string;
   canUpdate: boolean;
   canDelete: boolean;
+  canCreate: boolean;
 };
+
+
 
 async function fetchAppointments() {
   return getDashboardAppointmentsByCurrentUser();
@@ -30,7 +34,35 @@ export default function AppointmentsList({
   selectedDate,
   canUpdate,
   canDelete,
+  canCreate
 }: AppointmentsListProps) {
+
+  function formatCPF(cpf?: string | null) {
+  if (!cpf) return "N/A";
+
+  const cleaned = cpf.replace(/\D/g, "");
+
+  if (cleaned.length !== 11) return cpf;
+
+  return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+}
+
+function formatPhone(phone?: string | null) {
+  if (!phone) return "N/A";
+
+  const cleaned = phone.replace(/\D/g, "");
+
+  if (cleaned.length === 11) {
+    return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+  }
+
+  if (cleaned.length === 10) {
+    return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+  }
+
+  return phone;
+}
+
   const { data: appointments = initialAppointments, isFetching } = useQuery({
     queryKey: ["appointments", clinicId],
     queryFn: fetchAppointments,
@@ -45,10 +77,26 @@ export default function AppointmentsList({
     parsedSelectedDate,
   );
 
+  const [loadFilters,setLoadFilter] = useState(false)
+  
+
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {filteredAppointments.map((appointment, index) => (
+
+    <AppointmentsFilters
+              key={`${search}-${selectedDate}`}
+              search={search}
+              date={selectedDate}
+              clinicId={clinicId}
+              canCreate={canCreate}
+              setLoad={setLoadFilter}
+            />
+
+      <div
+  className={`grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 transition-all duration-200`}>
+
+    {loadFilters? null :
+  filteredAppointments.map((appointment, index) => (
           <Card
             key={`${appointment.data}-${appointment.hora}-${appointment.cpf}-${index}`}
           >
@@ -91,31 +139,24 @@ export default function AppointmentsList({
                 <strong>Hora:</strong> {appointment.hora ?? "N/A"}
               </p>
               <p>
-                <strong>Contato:</strong> {appointment.contato ?? "N/A"}
+                <strong>Contato:</strong> {formatPhone(appointment.contato) ?? "N/A"}
               </p>
               <p>
-                <strong>CPF:</strong> {appointment.cpf ?? "N/A"}
+                <strong>CPF:</strong> {formatCPF(appointment.cpf) ?? "N/A"}
               </p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {isFetching ? (
-        <>
-          <hr className="border-0.5 border-primary" />
-          <p className="w-full text-center text-sm text-gray-500">
-            Carregando...
-          </p>
-        </>
-      ) : filteredAppointments.length === 0 ? (
+      {!loadFilters && filteredAppointments.length === 0 && (
         <>
           <hr className="border-0.5 border-primary" />
           <p className="w-full text-center text-sm text-gray-500">
             Nenhum agendamento
           </p>
         </>
-      ) : null}
+      )}
     </>
   );
 }

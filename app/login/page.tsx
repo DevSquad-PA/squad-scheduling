@@ -162,9 +162,7 @@ export default function Login() {
           </Button>
         </form>
 
-        <Button variant="transparent" asChild className="border-primary">
-          <Link href="/signup">Cadastrar</Link>
-        </Button>
+        
       </section>
     </main>
   );

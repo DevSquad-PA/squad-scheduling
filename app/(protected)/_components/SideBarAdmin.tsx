@@ -164,7 +164,7 @@ export default function SideBarAdmin({ children, user }: Props) {
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader>
-          <h2 className="text-lg font-bold">Clinica</h2>
+          <h2 className="text-lg font-bold">Menu</h2>
         </SidebarHeader>
 
         <SidebarContent>
@@ -187,14 +187,6 @@ export default function SideBarAdmin({ children, user }: Props) {
               </Link>
             </SidebarMenuItem>
 
-            <SidebarMenuItem>
-              <Link href="">
-                <SidebarMenuButton>
-                  <Newspaper />
-                  Relatorios
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
 
             <SidebarMenuItem>
               <Link href="/settings">
@@ -255,7 +247,7 @@ export default function SideBarAdmin({ children, user }: Props) {
         <div className="flex items-center justify-between gap-2 border-b p-4">
           <div className="flex items-center gap-4">
             <TriggerCollapsed />
-            <h1 className="text-xl font-semibold">Administracao</h1>
+            <h1 className="text-xl font-semibold">Administração</h1>
           </div>
           <button
             type="button"
